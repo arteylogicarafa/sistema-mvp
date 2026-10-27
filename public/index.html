@@ -1,0 +1,1374 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Guía de Construcción de Sistemas</title>
+<link rel="icon" type="image/png" href="mvp.png">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+/* Layout: barra lateral de módulos + área central de lectura; tablas y listas en lugar de tarjetas. */
+:root{
+  --bg:#F4F6F5; --surface:#FFFFFF; --surface2:#EDF1EF; --fg:#18211F; --muted:#56635F; --line:#D5DDDA;
+  --accent:#0F6B66; --on-accent:#FFFFFF;
+  --accent-text:color-mix(in srgb,var(--accent) 80%,var(--fg));
+  --accent-soft:color-mix(in srgb,var(--accent) 11%,var(--surface));
+  --pend:#6B7773; --dev:#A8680B; --ok:#1B7F46; --na:#4F63A0; --bad:#B3321F;
+  --pend-soft:#ECEFEE; --dev-soft:#FBF0DC; --ok-soft:#E0F2E7; --na-soft:#E4E9F6; --bad-soft:#FAE6E2;
+  --f-sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-serif:"IBM Plex Serif",Georgia,"Times New Roman",serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111816; --surface:#19221F; --surface2:#202B28; --fg:#E6EDEA; --muted:#9AA9A4; --line:#2F3C38;
+  --pend:#98A6A1; --dev:#E3A547; --ok:#5CC48A; --na:#8FA3E0; --bad:#F08A78;
+  --pend-soft:#26302D; --dev-soft:#3A2F18; --ok-soft:#173326; --na-soft:#232B45; --bad-soft:#40201A;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111816; --surface:#19221F; --surface2:#202B28; --fg:#E6EDEA; --muted:#9AA9A4; --line:#2F3C38;
+  --pend:#98A6A1; --dev:#E3A547; --ok:#5CC48A; --na:#8FA3E0; --bad:#F08A78;
+  --pend-soft:#26302D; --dev-soft:#3A2F18; --ok-soft:#173326; --na-soft:#232B45; --bad-soft:#40201A;
+  color-scheme:dark}
+*{box-sizing:border-box}
+:root{color-scheme:light}
+[hidden]{display:none!important}
+img{max-width:100%}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--f-sans);margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--accent-text)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+h1,h2{font-family:var(--f-serif);font-weight:600;text-wrap:balance;margin:0;letter-spacing:-.01em}
+h1{font-size:28px;line-height:1.2}
+h2{font-size:20px;line-height:1.3}
+h3{font-size:15px;font-weight:600;margin:0}
+p{margin:0}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.lbl{font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+.app{display:grid;grid-template-columns:292px minmax(0,1fr);min-height:100vh}
+#side{position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--surface);border-right:1px solid var(--line);
+  padding:18px 14px 20px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+.brand{display:flex;flex-direction:column;gap:2px}
+.brand b{font-family:var(--f-serif);font-size:16px;line-height:1.25}
+.brand span{font-size:12.5px;color:var(--muted)}
+.side-total{display:flex;flex-direction:column;gap:6px;padding:10px 0;border-block:1px solid var(--line)}
+.side-total .row{display:flex;justify-content:space-between;align-items:baseline}
+.side-total .big{font-family:var(--f-mono);font-size:22px;font-weight:500}
+nav{display:flex;flex-direction:column;gap:1px}
+.nv{display:grid;grid-template-columns:26px minmax(0,1fr) auto;align-items:center;gap:6px;text-align:left;background:none;border:0;border-radius:6px;padding:7px 8px;color:var(--fg)}
+.nv:hover{background:var(--surface2)}
+.nv[aria-current="page"]{background:var(--accent-soft);color:var(--accent-text);font-weight:600}
+.nv .n{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.nv .t{font-size:13.5px;line-height:1.3}
+.nv .p{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.nv .p.done{color:var(--ok);font-weight:600}
+.nv .badge{background:var(--bad);color:#fff;border-radius:9px;font-size:11px;padding:0 6px;font-family:var(--f-mono)}
+.navhead{margin:8px 8px 3px}
+#side>*{flex-shrink:0}
+.themeseg{display:flex}
+.themeseg button{flex:1;padding:6px 8px;font-size:13px}
+.themeseg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:600}
+.sideclose{display:none}
+.persist{font-size:12px;color:var(--muted);line-height:1.45;margin-top:auto;padding-top:10px;border-top:1px solid var(--line)}
+
+.topbar{display:none}
+.scrim{display:none}
+.content{max-width:980px;margin-inline:auto;padding-block:30px 64px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+
+.bar{height:8px;border-radius:4px;background:var(--surface2);display:flex;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%}
+.bar .c{background:var(--ok)}.bar .d{background:var(--dev)}
+.bar.sm{height:6px}
+
+a.btn{display:inline-block;text-decoration:none;color:var(--fg)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 12px;font-size:13.5px;font-weight:500}
+.btn:hover{border-color:var(--accent);color:var(--accent-text)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.pri:hover{filter:brightness(1.08);color:var(--on-accent)}
+.btn.danger{color:var(--bad)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:13px}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill.s-p{background:var(--pend-soft);color:var(--pend)}
+.pill.s-d{background:var(--dev-soft);color:var(--dev)}
+.pill.s-c{background:var(--ok-soft);color:var(--ok)}
+.pill.s-n{background:var(--na-soft);color:var(--na)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));border:1px solid var(--line);border-radius:8px;background:var(--surface);overflow:hidden}
+.stat{padding:12px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.stat:last-child{border-right:0}
+.stat .v{font-family:var(--f-mono);font-size:26px;font-weight:500;line-height:1.1}
+.stat .k{font-size:12.5px;color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.panel>header{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.mrow{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(90px,1.4fr) 80px 104px;gap:14px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line);background:none;border-inline:0;border-top:0;width:100%;text-align:left}
+.mrow:last-child{border-bottom:0}
+button.mrow:hover{background:var(--surface2)}
+.mrow .nm{display:flex;gap:10px;align-items:baseline;min-width:0}
+.mrow .nm span:last-child{min-width:0}
+.cols2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.list{list-style:none;margin:0;padding:0}
+.list li{padding:8px 16px;border-bottom:1px solid var(--line);display:flex;gap:10px;justify-content:space-between;align-items:baseline}
+.list li:last-child{border-bottom:0}
+.linkbtn{background:none;border:0;padding:0;text-align:left;color:var(--accent-text);text-decoration:underline;text-underline-offset:2px}
+
+.mhead{display:flex;flex-direction:column;gap:10px}
+.mhead .kicker{font-family:var(--f-mono);font-size:12.5px;color:var(--accent-text)}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;padding:14px 0;border-block:1px solid var(--line)}
+.meta div{display:flex;flex-direction:column;gap:3px}
+.fund{border-left:3px solid var(--accent);background:var(--accent-soft);padding:10px 14px;border-radius:0 6px 6px 0}
+.group{display:flex;flex-direction:column;gap:8px}
+.ghead{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.ghead .gid{font-family:var(--f-mono);color:var(--accent-text);font-size:13px}
+.ghead .gp{margin-left:auto;font-family:var(--f-mono);font-size:12.5px;color:var(--muted)}
+.req{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--pend);border-radius:6px}
+.req.s-d{border-left-color:var(--dev)}.req.s-c{border-left-color:var(--ok)}.req.s-n{border-left-color:var(--na)}
+.rhead{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px 12px;align-items:center;padding:9px 12px}
+.rid{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.rtitle{background:none;border:0;text-align:left;padding:2px 0;font-weight:500;display:flex;gap:8px;align-items:baseline;min-width:0}
+.rtitle:hover{color:var(--accent-text)}
+.rtitle .car{font-family:var(--f-mono);color:var(--muted);flex:none;transition:transform .15s}
+.rtitle[aria-expanded="true"] .car{transform:rotate(90deg)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{background:var(--surface);border:0;border-right:1px solid var(--line);padding:5px 9px;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.seg button:last-child{border-right:0}
+.seg button:hover{background:var(--surface2)}
+.seg button[aria-checked="true"].k-p{background:var(--pend);color:#fff}
+.seg button[aria-checked="true"].k-d{background:var(--dev);color:#fff}
+.seg button[aria-checked="true"].k-c{background:var(--ok);color:#fff}
+.seg button[aria-checked="true"].k-n{background:var(--na);color:#fff}
+:root[data-theme="dark"] .seg button[aria-checked="true"]{color:#101614}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .seg button[aria-checked="true"]{color:#101614}}
+.rbody{border-top:1px solid var(--line);padding:14px 14px 16px 16px;display:flex;flex-direction:column;gap:14px;background:color-mix(in srgb,var(--surface) 70%,var(--bg))}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px 22px}
+.dgrid>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.dgrid .crit{grid-column:1/-1;background:var(--accent-soft);padding:9px 12px;border-radius:6px}
+.field{display:flex;flex-direction:column;gap:4px}
+textarea,input[type=text]{font:inherit;width:100%;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:6px;padding:8px 10px;resize:vertical}
+textarea{min-height:64px}
+.warn{color:var(--bad);font-size:12.5px;font-weight:500}
+.alert{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;padding:12px 16px;border-bottom:1px solid var(--line);align-items:baseline}
+.alert:last-child{border-bottom:0}
+.alert .tag{font-size:11.5px;font-weight:600;border-radius:4px;padding:1px 7px;background:var(--bad-soft);color:var(--bad);white-space:nowrap}
+.alert .tag.up{background:var(--dev-soft);color:var(--dev)}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:10px 16px;border-bottom:1px solid var(--line);cursor:pointer}
+.chk:last-child{border-bottom:0}
+.chk input{margin-top:4px;width:17px;height:17px;accent-color:var(--accent);flex:none}
+.princ{counter-reset:p}
+.princ li{counter-increment:p;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:baseline}
+.princ li::before{content:counter(p,decimal-leading-zero);font-family:var(--f-mono);color:var(--accent-text);font-size:13px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;padding:16px}
+.swatches{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sw{width:28px;height:28px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--fg)}
+input[type=color]{width:38px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;padding:16px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:13.5px;z-index:60;max-width:calc(100% - 32px)}
+
+.svg-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.svg-wrap svg{display:block;min-width:660px;width:100%;height:auto}
+svg .f{fill:var(--surface)} svg .f2{fill:var(--surface2)} svg .fa{fill:var(--accent)} svg .fas{fill:var(--accent-soft)} svg .fn{fill:none}
+svg .s{stroke:var(--line);stroke-width:1} svg .sa{stroke:var(--accent);stroke-width:1.2} svg .serr{stroke:var(--bad);stroke-width:1.6}
+svg .t{fill:var(--fg);font-family:var(--f-sans)}
+svg .tm{fill:var(--muted)} svg .ta{fill:var(--on-accent)} svg .ac{fill:var(--accent-text)} svg .err{fill:var(--bad)} svg .ok{fill:var(--ok)} svg .dv{fill:var(--dev)}
+svg .tb{font-weight:600} svg .mono{font-family:var(--f-mono)}
+svg .mk{fill:var(--fg)} svg .mkt{fill:var(--bg);font-weight:600;font-family:var(--f-sans)}
+svg .errbg{fill:var(--bad-soft)} svg .okbg{fill:var(--ok-soft)} svg .warnbg{fill:var(--dev-soft)} svg .nabg{fill:var(--na-soft)}
+svg .ln{fill:var(--line)} svg .lna{fill:var(--accent)} svg .ov{fill:var(--fg);opacity:.4} svg .dot{fill:var(--line)}
+svg .pl-c{fill:var(--ok-soft)} svg .pt-c{fill:var(--ok)} svg .pl-d{fill:var(--dev-soft)} svg .pt-d{fill:var(--dev)}
+svg .pl-b{fill:var(--bad-soft)} svg .pt-b{fill:var(--bad)} svg .pl-n{fill:var(--na-soft)} svg .pt-n{fill:var(--na)} svg .pl-p{fill:var(--pend-soft)} svg .pt-p{fill:var(--pend)}
+svg .arr{stroke:var(--muted);stroke-width:1.4;fill:none} svg .arrd{stroke-dasharray:5 4} svg .arrf{fill:var(--muted)}
+svg .dash{stroke:var(--line);stroke-dasharray:4 4;fill:none}
+.fig{display:flex;flex-direction:column;gap:10px;margin:0}
+.fig figcaption{font-weight:600}
+.legend{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:8px 24px}
+.legend li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;align-items:start;font-size:14px}
+.mkn{width:22px;height:22px;border-radius:50%;background:var(--fg);color:var(--bg);display:inline-grid;place-items:center;font-size:12px;font-weight:600;font-family:var(--f-sans)}
+.shot-sec{display:flex;flex-direction:column;gap:22px}
+/* ---- Equipo, autoevaluación y administrador ---- */
+.banner{border:1px solid var(--line);border-left:4px solid var(--dev);background:var(--dev-soft);border-radius:6px;padding:10px 14px;font-size:14px}
+.banner.ok{border-left-color:var(--ok);background:var(--ok-soft)}
+.banner.bad{border-left-color:var(--bad);background:var(--bad-soft)}
+.banner b{font-weight:600}
+.codebox{font-family:var(--f-mono);font-size:22px;letter-spacing:.08em;font-weight:500;padding:8px 14px;border:1px dashed var(--accent);border-radius:6px;background:var(--accent-soft);display:inline-block;user-select:all}
+.formcard{display:flex;flex-direction:column;gap:16px;padding:16px}
+.members{display:flex;flex-direction:column;gap:10px}
+.member{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center}
+.member .mn{font-family:var(--f-mono);font-size:12.5px;color:var(--muted)}
+.ferr{color:var(--bad);font-size:13px;font-weight:500}
+input[type=text],input[type=password],input[type=number],input[type=search]{font:inherit;width:100%;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:6px;padding:9px 10px}
+input.invalid,textarea.invalid{border-color:var(--bad);box-shadow:0 0 0 1px var(--bad)}
+.evrow{display:grid;grid-template-columns:minmax(0,1.3fr) 92px 70px minmax(0,1.6fr);gap:10px 14px;align-items:start;padding:12px 16px;border-bottom:1px solid var(--line)}
+.evrow:last-child{border-bottom:0}
+.evhead{font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--surface2);align-items:center}
+.evrow .mname{display:flex;gap:8px;align-items:baseline;min-width:0}
+.evrow input[type=number]{font-family:var(--f-mono);text-align:center}
+.avg{font-family:var(--f-mono);font-size:30px;font-weight:500;color:var(--accent-text)}
+.atable{display:flex;flex-direction:column}
+.arow{display:grid;grid-template-columns:minmax(0,2fr) 90px 90px 110px 88px;gap:8px 14px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--line)}
+.arow:last-child{border-bottom:0}
+.ahead{font-size:11.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--surface2)}
+.ateam{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ateam .pn{font-weight:600;overflow-wrap:anywhere}
+.adet{padding:4px 16px 16px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--surface) 70%,var(--bg));display:flex;flex-direction:column;gap:10px}
+.mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.mini div{border:1px solid var(--line);border-radius:6px;padding:6px 10px;background:var(--surface);font-size:13px}
+.mini b{font-family:var(--f-mono)}
+.gap-hi{color:var(--bad);font-weight:600}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.toolbar input{flex:1;min-width:180px}
+@media (max-width:900px){
+  .app{display:block}
+  #side{position:fixed;top:0;bottom:0;left:0;height:auto;width:min(330px,90vw);z-index:40;transform:translateX(-102%);transition:transform .2s;box-shadow:0 0 30px rgba(0,0,0,.25);overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));padding-top:calc(18px + env(safe-area-inset-top,0px))}
+  #side.open{transform:none}
+  .scrim.open{display:block;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:35}
+  body.noscroll{overflow:hidden}
+  .sideclose{display:inline-flex!important}
+  .nv{padding:11px 8px}
+  .chip{padding:8px 14px}
+  .btn{padding:10px 14px}
+  input[type=text],input[type=password],input[type=number],input[type=search],textarea,select{font-size:16px}
+  .stats .stat:last-child:nth-child(odd){grid-column:1/-1;border-right:0}
+  .mrow{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"nm pc" "bw bw" "st st";row-gap:6px;column-gap:10px}
+  .mrow .nm{grid-area:nm}.mrow .bw{grid-area:bw}.mrow .pc{grid-area:pc;text-align:right}.mrow .st{grid-area:st}
+  .evrow{grid-template-columns:minmax(0,1fr) 96px}
+  .evrow .mname{grid-column:1/-1}
+  .evrow .cm{grid-column:1/-1}
+  .evhead{display:none}
+  .arow{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}
+  .ahead{display:none}
+  .member{grid-template-columns:22px minmax(0,1fr)}
+  .member .btn{grid-column:2}
+  .svg-wrap svg{width:680px;max-width:none}
+  .svg-wrap::after{content:"Desliza para ver la figura completa";display:block;font-size:12px;color:var(--muted);padding:6px 10px;border-top:1px solid var(--line);position:sticky;left:0}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:50;background:var(--surface)}
+  .topbar{display:flex;align-items:center;gap:12px;position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--surface);border-bottom:1px solid var(--line);
+    padding:9px max(16px,env(safe-area-inset-right,0px)) 9px max(16px,env(safe-area-inset-left,0px))}
+  .topbar .tt{font-family:var(--f-serif);font-weight:600;font-size:15px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar .tp{font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+  .content{padding-block:20px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  h1{font-size:23px}
+  .rhead{grid-template-columns:auto minmax(0,1fr)}
+  .rhead .seg{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr)}
+  .seg button{padding:10px 4px;min-height:44px;font-size:12px;white-space:normal;line-height:1.2}
+  .stat{border-bottom:1px solid var(--line)}
+  .princ li{grid-template-columns:30px minmax(0,1fr)}
+  .princ li .linkbtn{grid-column:2}
+}
+.loader{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:var(--bg);transition:opacity .45s ease;padding:16px}
+.loader.out{opacity:0;pointer-events:none}
+.lcard{width:min(460px,100%);display:flex;flex-direction:column;align-items:center;gap:16px;padding:22px 26px 20px;background:#fff;border-radius:18px;box-shadow:0 10px 40px rgba(14,42,102,.18)}
+.lcard img{width:100%;height:auto;display:block;animation:lfloat 2.4s ease-in-out infinite}
+.lbar{width:100%;height:6px;border-radius:3px;background:#E3E9F4;overflow:hidden}
+.lbar i{display:block;height:100%;width:38%;border-radius:3px;background:linear-gradient(90deg,#0B79F2,#FF8A00);animation:lslide 1.3s ease-in-out infinite}
+.lcard p{margin:0;font-size:13.5px;color:#20325F;font-weight:500}
+@keyframes lfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes lslide{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.rtitle .car,#side{transition:none}.lcard img,.lbar i{animation:none}.lbar i{width:100%}.loader{transition:none}}
+</style>
+
+<div class="loader" id="loader" role="status" aria-live="polite">
+  <div class="lcard">
+    <img src="mvp.png" alt="CodeQuest MVP, Producto Mínimo Viable, by Rafa Guerrero" width="1774" height="887" id="loaderImg">
+    <div class="lbar" aria-hidden="true"><i></i></div>
+    <p>Cargando la guía…</p>
+  </div>
+</div>
+<div class="app">
+  <aside id="side" aria-label="Módulos de la guía"></aside>
+  <div class="scrim" id="scrim"></div>
+  <div>
+    <div class="topbar">
+      <button class="btn" id="menuBtn" aria-label="Abrir menú de módulos" aria-controls="side">Menú</button>
+      <span class="tt" id="topTitle">Guía</span>
+      <span class="tp" id="topPct"></span>
+      <button class="btn" id="themeBtn" aria-label="Cambiar entre tema claro y oscuro" title="Cambiar tema">◐</button>
+    </div>
+    <main class="content" id="main"></main>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+"use strict";
+/* ============ CONTENIDO DE LA GUÍA ============ */
+// Cada requisito: [título, descripción, ejemplo, recomendación, criterio de cumplimiento]
+const MODS = [
+{id:1,name:"Análisis del problema y definición del sistema",short:"Análisis del problema",
+ imp:"Un sistema sin un problema claro termina siendo un conjunto de pantallas. Esta etapa fija qué se construye, para quién y por qué, y es la referencia contra la que se evalúa todo lo demás.",
+ obj:"Documentar el problema, los objetivos, los requerimientos, los actores y los casos de uso antes de escribir código.",
+ fund:"Las funcionalidades implementadas deben corresponderse con los casos de uso definidos en el análisis.",
+ groups:[
+ {id:"1.1",name:"Identificación del problema",why:"Define la razón de ser del proyecto y evita construir una solución para un problema que nadie tiene.",reqs:[
+  ["Descripción del problema y beneficiario","Redacta qué falla hoy y a quién afecta, identificando la institución, empresa o comunidad beneficiaria con nombre y contexto.","La Coordinación de Pasantías registra solicitudes en hojas de cálculo; se extravían y no hay seguimiento del estado.","Describe el problema sin mencionar tecnología ni la solución.","Una persona ajena al proyecto entiende el problema y quién lo sufre después de leer un párrafo."],
+  ["Situación actual del proceso","Describe cómo se realiza hoy el proceso: pasos, responsables, herramientas y tiempos.","El estudiante entrega un formato en papel, secretaría lo transcribe a Excel y luego lo reenvía por correo al tutor.","Entrevista a quienes ejecutan el proceso y conserva evidencia (formatos, capturas, notas).","Existe una descripción del proceso actual validada por al menos un usuario real."],
+  ["Consecuencias y necesidad del sistema","Explica qué ocurre si el problema continúa y por qué un sistema informático es la respuesta adecuada.","Demoras de dos semanas, solicitudes perdidas, imposibilidad de generar estadísticas para la dirección.","Cuantifica con datos reales o estimaciones razonadas; evita afirmaciones genéricas.","Las consecuencias están enunciadas y la necesidad del sistema se deduce de ellas."],
+  ["Justificación del proyecto","Argumenta la relevancia, el beneficio esperado y la viabilidad técnica y de tiempo del proyecto.","El sistema reduce el tiempo de trámite, centraliza la información y es viable con el equipo y plazo del curso.","Relaciona la justificación con los beneficios medibles para la institución.","La justificación conecta el problema, el beneficio y la viabilidad sin contradicciones."]]},
+ {id:"1.2",name:"Definición de objetivos",why:"Los objetivos son el compromiso del proyecto: lo que se promete es lo que se evalúa.",reqs:[
+  ["Objetivo general y objetivos específicos","Un objetivo general redactado con verbo en infinitivo y objetivos específicos medibles que lo desglosan.","General: desarrollar un sistema web para gestionar solicitudes de pasantías. Específico: permitir registrar, aprobar y consultar solicitudes.","Redacta cada objetivo específico de modo que pueda verificarse con una funcionalidad concreta.","Cada objetivo específico se corresponde con al menos un módulo o funcionalidad del sistema."],
+  ["Alcance y limitaciones","Delimita qué incluye y qué no incluye el sistema, y las restricciones de tiempo, recursos o tecnología.","Incluye registro y aprobación de solicitudes; no incluye pagos ni integración con el sistema académico.","Un alcance honesto protege al equipo: lo que no se declara se espera completo.","El alcance y las limitaciones están escritos y son coherentes con el sistema entregado."],
+  ["Beneficiarios directos e indirectos","Identifica quiénes usan el sistema (directos) y quiénes se benefician de sus resultados (indirectos).","Directos: coordinadores y estudiantes. Indirectos: empresas receptoras y la dirección de la facultad.","Distingue usuarios que operan el sistema de quienes solo reciben sus resultados.","Los beneficiarios están listados y se relacionan con los actores del sistema."]]},
+ {id:"1.3",name:"Requerimientos del sistema",why:"Los requerimientos traducen el problema en condiciones verificables que el sistema debe cumplir.",reqs:[
+  ["Requerimientos funcionales","Lista lo que el sistema debe hacer, redactado como acciones verificables y numeradas.","RF-03: el sistema permitirá a un estudiante registrar una solicitud indicando empresa, fecha de inicio y tutor.","Numera los requerimientos para poder trazarlos hasta los casos de uso y las pantallas.","Cada requerimiento funcional es verificable, único y está asociado a un objetivo específico."],
+  ["Requerimientos no funcionales","Describe las cualidades del sistema: restricciones técnicas, estándares, plataforma y condiciones de operación.","RNF-01: el sistema funcionará en navegadores modernos sin instalar software adicional.","Evita términos vagos como «rápido» o «fácil»; define un valor o criterio medible.","Los requerimientos no funcionales son medibles y cada uno puede comprobarse con una prueba."],
+  ["Requerimientos de seguridad","Define autenticación, roles, protección de datos, auditoría y cualquier norma que deba cumplirse.","RS-02: las contraseñas se almacenarán con hash; solo el rol Coordinador podrá aprobar solicitudes.","Parte de los actores y de los datos sensibles identificados en el análisis.","Hay requerimientos de seguridad explícitos que luego se implementan y se pueden probar."],
+  ["Requerimientos de disponibilidad y rendimiento","Establece cuánto tiempo debe estar disponible el sistema y qué tiempos de respuesta se esperan.","Disponible en horario académico; las consultas de listados responden en menos de 3 segundos con 5000 registros.","Usa el volumen de datos y de usuarios esperado, no cifras arbitrarias.","Existen metas de disponibilidad y rendimiento con valores y un modo de comprobarlas."],
+  ["Requerimientos de usabilidad y mantenimiento","Indica quién usará el sistema y su nivel técnico, y cómo se mantendrá y documentará el código.","Un usuario nuevo registra una solicitud en menos de 5 minutos sin capacitación; el código está documentado y versionado.","Define la usabilidad según el perfil real de los usuarios.","Se describen metas de usabilidad y prácticas de mantenimiento aplicables al proyecto."]]},
+ {id:"1.4",name:"Identificación de actores",why:"Los actores determinan quién puede hacer qué; de ellos se derivan los roles, los permisos y las pantallas.",reqs:[
+  ["Actores identificados y descritos","Lista cada tipo de usuario o sistema externo que interactúa con la aplicación y describe su responsabilidad.","Administrador, Coordinador, Estudiante y Supervisor, con una frase sobre su función.","Define actores por el rol que cumplen, no por personas concretas.","Cada actor tiene nombre, descripción y funciones; no faltan actores que aparezcan en los casos de uso."],
+  ["Actores correspondientes a funciones reales","Los actores deben corresponderse con funciones que realmente desempeñan dentro del sistema.","No se define «Supervisor» si ninguna funcionalidad lo requiere.","Elimina actores decorativos y fusiona los que tengan los mismos permisos.","Cada actor aparece en al menos un caso de uso y viceversa."]]},
+ {id:"1.5",name:"Casos de uso",why:"Los casos de uso son el puente entre el análisis y el sistema construido; permiten verificar que nada falta ni sobra.",reqs:[
+  ["Diagrama de casos de uso","Representa gráficamente actores, casos de uso y sus relaciones dentro de los límites del sistema.","Diagrama UML con Estudiante→Registrar solicitud y Coordinador→Aprobar solicitud.","Mantén un nivel de detalle legible; usa include y extend solo cuando aporten claridad.","El diagrama es legible, usa notación correcta y cubre los requerimientos funcionales."],
+  ["Descripción de casos de uso","Para cada caso: actor responsable, flujo principal y flujos alternativos.","Flujo alternativo: la solicitud ya existe para ese periodo, el sistema informa y no la duplica.","Usa una plantilla única para todos los casos.","Cada caso de uso tiene actor, flujo principal y al menos un flujo alternativo o de excepción."],
+  ["Precondiciones y postcondiciones","Indica qué debe cumplirse antes de ejecutar el caso y qué estado queda después.","Pre: el usuario inició sesión como Estudiante. Post: la solicitud queda en estado «Pendiente».","Las postcondiciones deben coincidir con cambios reales en la base de datos.","Todos los casos de uso tienen precondiciones y postcondiciones consistentes con el modelo de datos."],
+  ["Trazabilidad entre casos de uso y funcionalidades","Verifica que cada caso de uso esté implementado y que cada funcionalidad corresponda a un caso de uso.","Tabla: CU-04 Aprobar solicitud → pantalla «Solicitudes pendientes», botón Aprobar, tabla solicitudes.","Construye una matriz casos de uso × pantallas y revísala antes de presentar.","No hay casos de uso sin implementar ni funcionalidades que no existan en el análisis."]]}
+ ]},
+{id:2,name:"Diseño y construcción de la base de datos",short:"Base de datos",
+ imp:"La base de datos es el núcleo del sistema: de su calidad dependen la integridad, el rendimiento y la confiabilidad de toda la información.",
+ obj:"Diseñar un modelo estructurado, normalizado y consistente que responda a las necesidades de información del análisis, y documentarlo.",
+ fund:"El modelo de datos debe corresponderse con los requerimientos funcionales, los casos de uso y las funcionalidades implementadas.",
+ groups:[
+ {id:"2.1",name:"Diseño estructural",why:"Un buen diseño estructural evita reconstruir tablas cuando el sistema ya está en marcha.",reqs:[
+  ["Entidades, tablas y atributos","Identifica las entidades del problema, conviértelas en tablas y define los atributos de cada una.","Entidades: Usuario, Solicitud, Empresa, Tutor. Atributos de Solicitud: fecha_inicio, fecha_fin, estado.","Deriva las entidades de los sustantivos de los requerimientos y casos de uso.","Cada tabla representa una entidad real y cada dato requerido por el análisis tiene un atributo."],
+  ["Claves primarias y foráneas","Define una clave primaria por tabla y claves foráneas para cada relación.","solicitud.id_usuario es clave foránea hacia usuario.id_usuario.","Prefiere claves sustitutas estables y evita claves con significado que cambie.","Todas las tablas tienen clave primaria y todas las relaciones están representadas con claves foráneas."],
+  ["Relaciones y cardinalidades","Establece cómo se relacionan las entidades (1:1, 1:N, N:M) y resuelve las N:M con tablas intermedias.","Un estudiante tiene muchas solicitudes; una solicitud pertenece a un solo estudiante (1:N).","Una relación N:M exige una tabla asociativa con sus propios atributos.","Las cardinalidades son correctas, están documentadas y no existen relaciones N:M sin resolver."],
+  ["Restricciones de integridad","Define restricciones que impidan datos inválidos: NOT NULL, UNIQUE, CHECK, DEFAULT.","CHECK (fecha_fin >= fecha_inicio); UNIQUE (cedula).","Declara la restricción en la base de datos y no solo en el formulario.","Las reglas más importantes del negocio están protegidas por restricciones en el motor de base de datos."]]},
+ {id:"2.2",name:"Normalización",why:"La normalización reduce redundancia y evita anomalías, pero debe aplicarse con criterio y no de forma mecánica.",reqs:[
+  ["Primera forma normal (1FN)","Cada campo contiene un valor atómico y no existen grupos repetitivos.","No guardar «telefono1, telefono2, telefono3»; crear una tabla telefono_usuario.","Si un campo contiene listas separadas por comas, normalízalo.","No hay campos multivaluados ni columnas repetidas en ninguna tabla."],
+  ["Segunda forma normal (2FN)","Los atributos dependen de toda la clave primaria, no de una parte de ella.","En detalle_pedido(id_pedido,id_producto,nombre_producto) el nombre depende solo de id_producto: va en producto.","Revisa especialmente las tablas con claves compuestas.","Ningún atributo no clave depende de una parte de una clave compuesta."],
+  ["Tercera forma normal (3FN)","Los atributos no clave dependen solo de la clave y no de otros atributos no clave.","En empleado(id,id_depto,nombre_depto) el nombre depende de id_depto: va en departamento.","Pregúntate: si cambia este dato, ¿en cuántos lugares debo corregirlo?","No existen dependencias transitivas; cada hecho se almacena en un solo lugar."],
+  ["Sin redundancias ni anomalías","Se evita duplicar datos y se previenen anomalías de inserción, actualización y eliminación. Las formas superiores solo si el sistema las justifica.","Se puede registrar una empresa sin tener solicitudes; borrar una solicitud no elimina la empresa.","Desnormaliza solo con justificación escrita (por ejemplo, rendimiento en reportes).","Se puede insertar, modificar y eliminar sin pérdida ni contradicción de datos; las excepciones están justificadas."]]},
+ {id:"2.3",name:"Integridad de los datos",why:"La integridad garantiza que los datos sigan siendo correctos aunque falle un formulario o se acceda sin la interfaz.",reqs:[
+  ["Integridad de entidad y referencial","Toda fila es identificable (clave primaria no nula) y toda clave foránea apunta a un registro existente.","No puede existir una solicitud con id_usuario inexistente.","Activa explícitamente las claves foráneas del motor (en SQLite requiere PRAGMA foreign_keys=ON).","Al intentar insertar una clave foránea inválida, el motor rechaza la operación."],
+  ["Integridad de dominio","Cada campo acepta solo valores permitidos mediante tipos, CHECK, enumeraciones o tablas de catálogo.","estado solo admite 'Pendiente','Aprobada','Rechazada'; monto > 0.","Prefiere tablas de catálogo cuando los valores puedan cambiar.","Insertar valores fuera de dominio directamente en la base de datos es rechazado."],
+  ["Unicidad y obligatoriedad","Define qué campos no pueden repetirse y cuáles no pueden quedar vacíos.","Correo y cédula únicos; nombre y fecha de solicitud obligatorios.","Considera índices únicos compuestos cuando la unicidad dependa de varios campos.","Los campos únicos y obligatorios están declarados con UNIQUE y NOT NULL."],
+  ["Restricciones en la base de datos, no solo en formularios","Las restricciones importantes deben existir también en el motor; los formularios son solo una ayuda.","Un script que inserta un correo duplicado debe fallar aunque el formulario no se use.","Prueba insertando datos inválidos directamente con una herramienta de consulta.","Las pruebas directas sobre la base de datos confirman que las reglas críticas se aplican sin el formulario."]]},
+ {id:"2.4",name:"Tipos de datos",why:"Tipos adecuados ahorran espacio, aceleran consultas y evitan errores de ordenamiento y cálculo.",reqs:[
+  ["Tipos de datos apropiados por campo","Usa el tipo específico para identificadores, nombres, correos, teléfonos, fechas, números, montos, estados y observaciones.","Fechas como DATE, montos como DECIMAL(10,2), estados como catálogo, observaciones como TEXT; no todo como VARCHAR.","Los montos nunca deben usar tipos de punto flotante; los teléfonos y cédulas son texto, no números.","Ningún campo con tipo específico disponible está almacenado como texto genérico sin justificación."]]},
+ {id:"2.5",name:"Relaciones y consistencia",why:"Las reglas de eliminación y las transacciones evitan datos huérfanos y operaciones a medias.",reqs:[
+  ["Reglas de eliminación y actualización","Define para cada clave foránea qué sucede al eliminar o modificar el registro padre: RESTRICT, CASCADE, SET NULL.","Eliminar un usuario con solicitudes se rechaza (RESTRICT); eliminar una solicitud elimina sus adjuntos (CASCADE).","Usa CASCADE con cautela; en datos históricos prefiere RESTRICT o eliminación lógica.","Cada clave foránea tiene una regla definida y probada."],
+  ["Uso de transacciones","Las operaciones que modifican varias tablas se ejecutan de forma atómica: o todo se guarda o nada.","Registrar solicitud y sus adjuntos dentro de una sola transacción con rollback ante cualquier error.","Cierra o revierte siempre la transacción; no la dejes abierta ante una excepción.","Un fallo a mitad de una operación múltiple no deja datos parciales."],
+  ["Consistencia entre registros relacionados","Las claves foráneas corresponden a registros existentes y las actualizaciones mantienen la coherencia.","El total de una factura coincide con la suma de sus detalles.","Evita guardar datos derivados; si debes guardarlos, define cómo se mantienen actualizados.","No existen registros huérfanos ni datos contradictorios tras las operaciones del sistema."]]},
+ {id:"2.6",name:"Documentación de la base de datos",why:"Sin documentación nadie, incluido el propio equipo, puede mantener ni evaluar el modelo.",reqs:[
+  ["Modelo entidad-relación","Diagrama que muestra entidades, atributos, claves, relaciones y cardinalidades.","Diagrama generado con una herramienta de modelado y exportado como imagen.","Debe coincidir con la base de datos real, no con una versión anterior.","El diagrama es legible y refleja exactamente las tablas existentes."],
+  ["Diccionario de datos","Descripción de cada tabla y campo: tipo, longitud, clave, restricciones, obligatoriedad y significado.","Tabla solicitud.estado: VARCHAR(12), NOT NULL, valores permitidos, descripción.","Mantenlo como tabla en el documento final, no como texto disperso.","Todos los campos de todas las tablas están descritos."],
+  ["Script de creación de la base de datos","Archivo SQL que crea tablas, claves, restricciones, índices y datos iniciales.","Un script que, ejecutado en un servidor vacío, deja la base lista para usar.","Versiona el script junto al código y evita que dependa de datos manuales.","Ejecutar el script desde cero reproduce la base de datos completa."]]},
+ {id:"2.7",name:"Seguridad de la base de datos",why:"La base de datos concentra la información sensible; un descuido aquí compromete todo el sistema.",reqs:[
+  ["Credenciales y control de acceso","Credenciales fuertes, protegidas en variables de entorno o archivos fuera del repositorio y del directorio público.","Cadena de conexión en un archivo .env excluido del control de versiones.","Nunca subas contraseñas al repositorio ni las dejes en el código fuente.","Las credenciales no aparecen en el código, el repositorio ni archivos accesibles desde la web."],
+  ["Consultas parametrizadas y prevención de inyección SQL","Toda consulta con datos del usuario usa parámetros o ORM; nunca concatenación de texto.","SELECT * FROM usuario WHERE correo = ? con el valor enviado como parámetro.","Revisa todo el código buscando consultas armadas con concatenación.","Probar con entradas como ' OR '1'='1 no altera ni expone información."],
+  ["Permisos separados y protección de datos sensibles","La aplicación usa un usuario de base de datos con los privilegios mínimos necesarios; los datos sensibles se protegen.","Usuario de aplicación con SELECT/INSERT/UPDATE, sin DROP ni acceso a otras bases.","No uses el usuario administrador (root/sa) en la aplicación.","La cuenta de la aplicación no tiene privilegios administrativos y los datos sensibles no se almacenan en claro."]]}
+ ]},
+{id:3,name:"Sistema de autenticación y seguridad de acceso",short:"Autenticación y seguridad",
+ imp:"Si el sistema administra información de personas o procesos reales, debe asegurar que solo quienes corresponden puedan acceder y hacer cada operación.",
+ obj:"Identificar de manera segura a los usuarios y restringir cada acción a los permisos que su rol tiene, validándolo siempre en el servidor.",
+ fund:"El sistema de autenticación debe corresponderse con los actores, los casos de uso y los permisos definidos durante el análisis.",
+ groups:[
+ {id:"3.1",name:"Inicio de sesión",why:"Es la puerta del sistema y el primer lugar donde se prueban sus defensas.",reqs:[
+  ["Formulario y validación de credenciales","Formulario de inicio con identificador y contraseña, y validación de ambos en el servidor.","Correo y contraseña verificados contra el hash almacenado en el servidor.","Compara contraseñas con la función de verificación del algoritmo de hash, no con comparación de texto.","El acceso solo se concede con credenciales correctas y se valida siempre en el servidor."],
+  ["Mensajes de error apropiados","Los mensajes informan al usuario sin revelar si falló el usuario o la contraseña.","«Credenciales incorrectas» para cualquier caso, no «El usuario no existe».","Los errores técnicos se registran internamente y al usuario se le muestra un mensaje genérico.","Los mensajes son comprensibles y no filtran información útil a un atacante."],
+  ["Manejo seguro de sesiones y cierre de sesión","Identificadores de sesión no predecibles, cookies protegidas (HttpOnly, Secure, SameSite) y cierre de sesión que destruye la sesión.","Tras cerrar sesión, volver atrás en el navegador no permite ver páginas protegidas.","Regenera el identificador de sesión al autenticarse.","La sesión se invalida en el servidor al cerrar sesión y expira por inactividad."]]},
+ {id:"3.2",name:"Protección de contraseñas",why:"Una filtración de contraseñas en texto plano expone también las cuentas del usuario en otros servicios.",reqs:[
+  ["Contraseñas con hash seguro","Almacena solo el hash de la contraseña con Argon2id, bcrypt o un algoritmo equivalente con sal.","password_hash() en PHP, bcrypt en Node, passlib en Python.","No uses MD5, SHA-1 ni SHA-256 simple para contraseñas, ni cifrado reversible.","Ninguna contraseña está almacenada en texto plano ni con un hash rápido sin sal."],
+  ["Sin exposición de credenciales","Las contraseñas y credenciales no aparecen en registros, mensajes de error ni archivos públicos.","Los logs no incluyen el cuerpo de la petición de inicio de sesión.","Revisa logs, respaldos y archivos de configuración accesibles por web.","Una búsqueda en logs, errores y archivos públicos no revela contraseñas ni claves."]]},
+ {id:"3.3",name:"Control de acceso",why:"Ocultar un botón no es seguridad: el servidor debe negarse a ejecutar lo que el rol no permite.",reqs:[
+  ["Control de acceso basado en roles o permisos","Cada actor tiene un rol con funcionalidades específicas y solo accede a ellas.","Administrador gestiona usuarios; Operador registra; Consulta solo visualiza.","Define una matriz rol × funcionalidad y úsala como fuente de verdad.","La matriz de permisos coincide con los actores del análisis y está implementada."],
+  ["Protección de rutas y operaciones en el servidor","Cada ruta y cada operación (crear, editar, eliminar) valida la sesión y el permiso en el servidor.","Un usuario de consulta que envía una petición POST de eliminación recibe un error 403.","Prueba accediendo por URL directa y con herramientas de petición HTTP, no solo con la interfaz.","Ninguna operación protegida funciona con un rol no autorizado, aunque se omita la interfaz."],
+  ["Restricción de información no autorizada","Un usuario solo puede ver y modificar los registros que le corresponden.","Un estudiante no puede ver solicitudes de otros cambiando el id en la URL.","Verifica la propiedad del registro en cada consulta, no solo el rol.","Cambiar identificadores en la URL o en la petición no revela datos de otros usuarios."]]},
+ {id:"3.4",name:"Seguridad adicional",why:"Son defensas que, según el contexto, evitan los ataques web más frecuentes.",reqs:[
+  ["Protección contra fuerza bruta y registro de intentos","Limita los intentos de acceso fallidos y registra los intentos de acceso.","Bloqueo temporal tras 5 intentos fallidos; registro de IP y fecha.","El bloqueo no debe permitir que un tercero deje fuera a un usuario legítimo de forma indefinida.","Intentos repetidos son limitados o retardados y quedan registrados."],
+  ["Recuperación y cambio de contraseña, expiración de sesión","Mecanismo seguro para recuperar y cambiar contraseñas y sesiones que expiran.","Enlace de recuperación de un solo uso con vencimiento de 30 minutos.","Pide la contraseña actual al cambiarla y cierra otras sesiones abiertas.","Los mecanismos existen cuando el contexto los requiere o están justificados como no aplicables."],
+  ["Protección XSS y validación de entradas","Escape de toda salida contra XSS y validación de toda entrada del usuario.","Un comentario con <script> se muestra como texto inofensivo.","Usa las protecciones del framework en lugar de escribirlas manualmente.","Las pruebas de inyección de scripts no funcionan y toda entrada se valida en el servidor."],
+  ["HTTPS y autenticación multifactor cuando corresponda","HTTPS en producción y MFA si el riesgo de la información lo justifica.","Certificado válido en el servidor de producción; MFA para el rol Administrador.","Si la autenticación multifactor no aplica, justifícalo con el nivel de riesgo.","El sistema en producción opera sobre HTTPS y la decisión sobre MFA está argumentada."]]}
+ ]},
+{id:4,name:"Dashboard, navegación y estructura general",short:"Dashboard y navegación",
+ imp:"Después del ingreso, el dashboard es la cara del sistema: define si el usuario encuentra rápido lo que necesita.",
+ obj:"Ofrecer un panel principal con navegación clara y coherente con los permisos de cada usuario.",
+ fund:"La estructura de navegación debe ser uniforme y reflejar los permisos definidos para cada actor.",
+ groups:[
+ {id:"4.1",name:"Dashboard principal",why:"Es el punto de partida desde el cual el usuario llega a cada módulo.",reqs:[
+  ["Panel principal con patrón de navegación definido","Un dashboard con menú lateral, horizontal, superior o combinado, según las necesidades del sistema.","Menú lateral con los módulos y encabezado con usuario y cierre de sesión.","Elige el patrón según la cantidad de módulos y el tipo de usuario.","Existe un panel principal desde el que se accede a todos los módulos permitidos."]]},
+ {id:"4.2",name:"Elementos del dashboard",why:"El usuario debe saber siempre dónde está, quién es y qué puede hacer.",reqs:[
+  ["Identificación del sistema y del usuario","Nombre del sistema, logotipo institucional, usuario autenticado, rol, acceso al perfil y cierre de sesión.","Encabezado con logo, nombre del sistema, «María Pérez · Coordinadora» y menú de perfil.","Mantén estos elementos en la misma posición en todas las pantallas.","Se muestran usuario y rol, y el cierre de sesión es accesible desde cualquier pantalla."],
+  ["Indicadores, resumen y notificaciones relevantes","Indicadores y resúmenes útiles para el rol, y notificaciones cuando el proceso las requiera.","Solicitudes pendientes de aprobación en el panel del Coordinador.","Cada indicador debe responder a una decisión que el usuario toma.","Los indicadores provienen de datos reales y son pertinentes para el rol."]]},
+ {id:"4.3",name:"Navegación",why:"Una navegación confusa hace que un sistema correcto parezca defectuoso.",reqs:[
+  ["Navegación clara, consistente y organizada","Misma estructura de menú y rutas en todas las pantallas, con nombres comprensibles.","El módulo «Solicitudes» se llama igual en el menú, el título de la página y los reportes.","Evita más de tres niveles de navegación y marca claramente la sección activa.","Un usuario nuevo llega a cada función sin ayuda y siempre sabe dónde está."],
+  ["Navegación coherente con los permisos","El menú muestra solo lo que el rol puede usar; el servidor lo valida igualmente.","El usuario de consulta no ve opciones de administración, y la URL directa tampoco funciona.","Genera el menú desde la matriz de permisos y no lo repitas por pantalla.","Cada rol ve únicamente las opciones que le corresponden."],
+  ["Pantallas conectadas sin callejones sin salida","Todas las pantallas se alcanzan desde la navegación y permiten volver o continuar.","Después de guardar, el sistema redirige al listado con un mensaje de confirmación.","Prueba cada flujo completo sin usar el botón «atrás» del navegador.","No existen pantallas huérfanas ni flujos que obliguen a editar la URL."]]}
+ ]},
+{id:5,name:"Diseño visual, identidad e interfaz de usuario",short:"Diseño e interfaz",
+ imp:"Una interfaz coherente comunica profesionalidad y reduce errores. Pantallas con estilos distintos parecen aplicaciones diferentes.",
+ obj:"Lograr una identidad visual consistente, fácil de usar, accesible y adaptable a distintos dispositivos y navegadores.",
+ fund:"Todas las pantallas deben mantener un mismo patrón de diseño y funcionar en los dispositivos y navegadores indicados.",
+ groups:[
+ {id:"5.1",name:"Identidad institucional",why:"El sistema debe parecer parte de la institución para la que se construye.",reqs:[
+  ["Logotipo y colores institucionales","Uso del logotipo de la institución o empresa y de sus colores en el diseño.","Logo en el encabezado y en los reportes; color primario institucional en botones y menú.","Solicita el manual de identidad o los colores oficiales a la institución.","El logotipo y los colores corresponden a la identidad definida por la institución."],
+  ["Paleta de colores consistente","Una paleta limitada y definida, aplicada de forma uniforme.","Un color primario, un secundario, neutros y colores de estado (éxito, alerta, error).","Define los colores como variables y evita valores sueltos en cada pantalla.","Todas las pantallas usan la misma paleta."]]},
+ {id:"5.2",name:"Consistencia visual",why:"La consistencia hace que lo aprendido en una pantalla sirva en todas las demás.",reqs:[
+  ["Tipografía y jerarquía","Una o dos familias tipográficas y tamaños de título uniformes.","Títulos de página de 24 px y subtítulos de 18 px en todas las pantallas.","Define una escala tipográfica y respétala.","Los títulos y textos tienen el mismo estilo en todo el sistema."],
+  ["Botones, formularios y tablas uniformes","Mismos estilos de botones, estructura de formularios, diseño de tablas y espaciados.","El botón principal siempre es del mismo color y está en la misma posición.","Crea componentes reutilizables en lugar de copiar estilos.","Formularios y tablas de módulos distintos son visualmente equivalentes."],
+  ["Iconografía, colores de estado y alertas","Un solo estilo de iconos, colores de estado fijos y un mismo patrón para mensajes de alerta.","Verde para éxito, ámbar para advertencia, rojo para error en todo el sistema.","No mezcles librerías de iconos de estilos distintos sin una razón de diseño.","Los iconos y las alertas son uniformes en todas las pantallas."]]},
+ {id:"5.3",name:"Experiencia de usuario",why:"Un sistema difícil de usar no resuelve el problema, aunque funcione.",reqs:[
+  ["Claridad, retroalimentación y prevención de errores","Acciones claras, mensajes comprensibles, confirmaciones y ayudas para evitar errores.","Tras guardar aparece «Solicitud registrada»; los campos inválidos se marcan con su explicación.","Escribe los mensajes desde el punto de vista del usuario, indicando cómo corregir el problema.","Cada acción da una respuesta visible y los errores se explican con claridad."],
+  ["Accesibilidad y legibilidad","Contraste suficiente, tamaños legibles, etiquetas en los campos y uso por teclado.","Todos los campos tienen etiqueta visible; se puede navegar con la tecla Tab.","Verifica el contraste del texto con una herramienta y no dependas solo del color para comunicar estados.","El contraste es adecuado y las funciones principales se pueden operar con el teclado."]]},
+ {id:"5.4",name:"Responsive design",why:"Los usuarios acceden desde teléfonos, tablets y computadoras.",reqs:[
+  ["Diseño adaptable con redistribución de elementos","El diseño se reorganiza según el tamaño de pantalla en escritorio, laptop, tablet y teléfono.","El menú lateral pasa a menú desplegable y las tablas se reorganizan o se desplazan en el teléfono.","Reducir el tamaño de la página no es responsive; los elementos deben reorganizarse.","El sistema fue probado en cuatro tamaños de pantalla y no presenta desplazamientos horizontales ni elementos superpuestos."]]},
+ {id:"5.5",name:"Compatibilidad",why:"Cada usuario tiene un navegador distinto y el sistema no debe depender de uno solo.",reqs:[
+  ["Compatibilidad con navegadores modernos","Funcionamiento correcto en Chrome, Firefox y Edge, y en Safari cuando corresponda.","Las funciones principales fueron probadas en tres navegadores.","Evita funciones exclusivas de un navegador y revisa la compatibilidad de cada API.","Las funcionalidades principales funcionan igual en los navegadores indicados."]]}
+ ]},
+{id:6,name:"Desarrollo de módulos y operaciones CRUD",short:"Módulos y CRUD",
+ imp:"Las operaciones CRUD son el trabajo diario del sistema: registrar, consultar, modificar y administrar los datos de cada entidad.",
+ obj:"Implementar para cada entidad las operaciones que su proceso requiere, coherentes con la base de datos y las reglas del negocio.",
+ fund:"Cada formulario, consulta y operación debe corresponderse con la estructura de la base de datos y con los casos de uso.",
+ groups:[
+ {id:"6.1",name:"Formularios de registro (Create)",why:"Un registro mal capturado genera errores en todos los procesos posteriores.",reqs:[
+  ["Formularios correspondientes a entidades o procesos","Cada formulario se corresponde con una entidad o proceso y contiene los campos necesarios.","El formulario «Nueva solicitud» tiene empresa, tutor, fecha de inicio y fecha de fin.","No incluyas campos que no existan en el modelo ni omitas campos obligatorios.","Cada formulario guarda correctamente en las tablas correspondientes."],
+  ["Campos obligatorios, validación y duplicidad","Identifica los campos obligatorios, valida los datos, muestra errores, evita registros incompletos y duplicados.","Al intentar registrar la misma cédula dos veces, se muestra «La cédula ya está registrada».","Combina la validación en el cliente con la del servidor y la de la base de datos.","No es posible guardar registros incompletos ni duplicados."]]},
+ {id:"6.2",name:"Consulta de información (Read)",why:"La información solo es útil si se puede encontrar fácilmente.",reqs:[
+  ["Listado, búsqueda, filtro y ordenamiento","Visualizar registros y permitir buscar, filtrar y ordenar.","Listado de solicitudes con búsqueda por nombre, filtro por estado y orden por fecha.","Realiza el filtrado en el servidor cuando el volumen sea grande.","Buscar, filtrar y ordenar arrojan resultados correctos."],
+  ["Detalle y paginación","Consultar el detalle de un registro y paginar cuando el volumen lo requiera.","Al seleccionar una solicitud se ve su información y su historial; el listado muestra 20 por página.","Pagina en la consulta (LIMIT/OFFSET), no cargando todos los registros en memoria.","El detalle muestra toda la información relevante y el listado responde bien con el volumen esperado."]]},
+ {id:"6.3",name:"Modificación de información (Update)",why:"Los datos cambian; modificarlos mal puede destruir la integridad.",reqs:[
+  ["Selección, edición, validación y guardado","Seleccionar un registro, cargar sus datos, modificar, validar y guardar manteniendo la integridad.","Al editar una solicitud se cargan sus datos; al guardar se aplican las mismas validaciones que al crear.","Aplica las mismas reglas de validación en crear y modificar; considera control de cambios simultáneos.","Las modificaciones se guardan correctamente, se validan y no rompen las relaciones."]]},
+ {id:"6.4",name:"Eliminación de información (Delete)",why:"Eliminar es irreversible; no siempre es lo correcto para el proceso.",reqs:[
+  ["Análisis previo a la eliminación","Evaluar si puede eliminarse, si tiene registros relacionados y si debe conservarse por razones históricas.","Una solicitud aprobada no se elimina porque queda como evidencia administrativa.","Decide por entidad si el eliminar tiene sentido en el proceso.","Para cada entidad existe una decisión justificada sobre si se elimina o se conserva."],
+  ["Eliminación lógica y estados","Usar estados (activo, inactivo, anulado, archivado) en lugar de borrar cuando corresponda.","Un usuario inactivo no puede iniciar sesión, pero conserva su historial.","Agrega el campo de estado al modelo y filtra por él en las consultas.","Los procesos que lo requieren usan estados y no borrado físico."],
+  ["Confirmación y protección de integridad","Solicitar confirmación y evitar eliminaciones que dejen datos inconsistentes.","Mensaje «¿Eliminar esta solicitud?» y bloqueo si tiene registros dependientes.","La confirmación debe ser parte de la interfaz, y la verificación de dependencias, del servidor.","Eliminar un registro con dependencias no deja datos huérfanos y siempre exige confirmación."]]},
+ {id:"6.5",name:"Correspondencia con la base de datos",why:"Es en este punto donde análisis, datos y código demuestran que son un solo sistema.",reqs:[
+  ["Coherencia entre modelo, formularios, validaciones y reglas","Campos, relaciones y restricciones coinciden entre el modelo de datos, los formularios, las validaciones, las operaciones CRUD y las reglas de negocio.","Si la base exige fecha_fin ≥ fecha_inicio, el formulario y el servidor aplican la misma regla.","Revisa campo por campo: tabla → formulario → validación → consulta.","No hay campos del formulario sin columna ni columnas obligatorias que el formulario no capture."]]}
+ ]},
+{id:7,name:"Validaciones y reglas de negocio",short:"Validaciones y reglas",
+ imp:"Las validaciones protegen la calidad de la información y la seguridad. Una regla de negocio sin validar es solo una intención.",
+ obj:"Validar cada dato según su significado, en el cliente para facilitar el uso y obligatoriamente en el servidor para proteger el sistema.",
+ fund:"Las validaciones deben responder a las características del problema y no limitarse a verificar que un campo tenga algún valor.",
+ groups:[
+ {id:"7.1",name:"Campos obligatorios",why:"Es la primera barrera contra los datos incompletos.",reqs:[
+  ["Campos vacíos, espacios en blanco y nulos","Impedir el registro cuando un campo obligatorio está vacío, es nulo o contiene solo espacios.","Un nombre con tres espacios se rechaza igual que un nombre vacío.","Recorta los espacios antes de validar.","Ningún campo obligatorio acepta vacíos, nulos ni solo espacios."],
+  ["Longitudes mínimas y máximas","Cada campo tiene límites de longitud acordes con su significado y su columna.","Cédula entre 6 y 10 dígitos; observaciones hasta 500 caracteres.","Los límites del formulario deben coincidir con los de la columna.","Valores fuera de los límites se rechazan con un mensaje claro."]]},
+ {id:"7.2",name:"Validaciones de texto",why:"Cada tipo de texto tiene reglas propias; una regla universal rechaza datos legítimos.",reqs:[
+  ["Reglas específicas por campo de texto","Validar longitud, caracteres permitidos y formato según el campo; nombres, direcciones y observaciones permiten caracteres distintos.","Nombres con tildes, ñ, guiones y apóstrofes aceptados; correo con formato válido; teléfono solo dígitos y símbolos permitidos.","No apliques una expresión regular única a todos los campos.","Cada campo de texto tiene su regla propia y acepta valores legítimos sin permitir contenido peligroso."]]},
+ {id:"7.3",name:"Validaciones numéricas",why:"Un monto o cantidad incorrecto se traduce en errores contables y operativos.",reqs:[
+  ["Valores numéricos, rangos, decimales y montos","Verificar que sea numérico, esté dentro de rangos, sin negativos cuando no corresponda, con decimales válidos y dentro de los límites del proceso.","Cantidad entera mayor que 0; monto con dos decimales y menor al límite de la caja.","Valida en el servidor y usa el tipo de dato exacto para dinero.","Valores no numéricos, negativos o fuera de rango son rechazados."]]},
+ {id:"7.4",name:"Validaciones de fechas",why:"Las fechas incoherentes rompen la lógica de procesos y reportes.",reqs:[
+  ["Formato, existencia y rangos de fechas","Validar el formato, que la fecha exista y que esté en un rango permitido (por ejemplo, la fecha de nacimiento no puede ser futura).","El 31/02 se rechaza; una fecha de nacimiento futura se rechaza.","Define explícitamente qué fechas pueden ser pasadas, presentes o futuras.","Fechas inexistentes o fuera de rango no se pueden guardar."],
+  ["Coherencia entre fechas","Las fechas relacionadas deben tener sentido entre sí.","La fecha de finalización no puede ser anterior a la fecha de inicio.","Aplica la regla también en la base de datos con CHECK.","Combinaciones incoherentes de fechas son rechazadas."]]},
+ {id:"7.5",name:"Validaciones de relaciones",why:"Los datos relacionados deben existir y corresponderse.",reqs:[
+  ["Existencia y correspondencia de registros relacionados","Verificar que los registros referenciados existan, que las opciones seleccionadas sean válidas y que las entidades se correspondan.","Un tutor seleccionado debe pertenecer a la empresa elegida.","Valida en el servidor, no confíes en lo que envía una lista desplegable.","Enviar identificadores inexistentes o no relacionados es rechazado."]]},
+ {id:"7.6",name:"Validaciones de negocio",why:"Impiden operaciones que contradicen el proceso real.",reqs:[
+  ["Reglas de negocio específicas del proceso","Impedir operaciones que contradicen el proceso: inscribir sin cupo, aprobar sin cumplir requisitos, pagos duplicados, finalizar lo que no ha comenzado.","No se puede aprobar una solicitud que no tiene todos los documentos cargados.","Lista las reglas de negocio de los requerimientos y marca dónde se valida cada una.","Cada regla de negocio identificada impide la operación incorrecta y devuelve un mensaje explicativo."],
+  ["Validación obligatoria en el servidor","Toda validación que proteja la integridad o la seguridad se ejecuta en el servidor, aunque exista en el cliente.","Enviar una petición HTTP manual con datos inválidos sigue siendo rechazado.","La validación en el cliente es una comodidad; la del servidor es el control.","Las pruebas sin interfaz confirman que el servidor rechaza datos inválidos."]]}
+ ]},
+{id:8,name:"Reportes, consultas y estadísticas",short:"Reportes y estadísticas",
+ imp:"Los datos solo cobran valor cuando se convierten en información útil para tomar decisiones.",
+ obj:"Ofrecer reportes, exportaciones y estadísticas relacionados con los objetivos del sistema.",
+ fund:"Los reportes y gráficos deben responder a los objetivos del sistema y no ser decorativos.",
+ groups:[
+ {id:"8.1",name:"Reportes por pantalla",why:"Son el medio más inmediato para consultar información organizada.",reqs:[
+  ["Listados, consultas detalladas y resúmenes","Listados, detalles, totales e información agrupada.","Total de solicitudes por estado y por mes.","Calcula totales en la consulta, no manualmente en la interfaz.","Los reportes muestran datos correctos y los totales coinciden con los registros."],
+  ["Filtros, búsquedas y ordenamiento en reportes","Permitir acotar y ordenar la información.","Filtrar por rango de fechas y por estado.","Muestra los filtros aplicados en el reporte.","Los filtros modifican correctamente los resultados."]]},
+ {id:"8.2",name:"Reportes en PDF",why:"Los PDF permiten entregar información formal fuera del sistema.",reqs:[
+  ["Contenido del reporte PDF","Nombre del sistema, identidad institucional, título, fecha de generación, filtros aplicados, encabezados y totales.","Encabezado con logo y título; fecha y filtros bajo el título; fila de totales al final.","Genera el PDF en el servidor con una biblioteca, no capturando la pantalla.","El PDF contiene los elementos indicados y coincide con lo visto en pantalla."],
+  ["Legibilidad y trazabilidad del PDF","Presentación profesional, numeración de páginas y usuario que lo genera.","«Página 2 de 5» y «Generado por: María Pérez».","Prueba el PDF con muchos registros para verificar los saltos de página.","El PDF es legible, paginado y se muestra bien con volúmenes grandes."]]},
+ {id:"8.3",name:"Exportación de información",why:"Permite llevar los datos a otras herramientas.",reqs:[
+  ["Exportación a Excel, CSV o impresión","Según las necesidades, exportar a Excel o CSV, imprimir o descargar documentos.","Botón «Exportar CSV» con los filtros aplicados.","Cuida la codificación (UTF-8) y los separadores.","La exportación abre correctamente en la herramienta destino y respeta los permisos del usuario."]]},
+ {id:"8.4",name:"Estadísticas y dashboard",why:"Las estadísticas ayudan a interpretar los datos, siempre que respondan a una pregunta real.",reqs:[
+  ["Estadísticas relacionadas con los objetivos","Totales, registros por período o categoría, comparaciones, tendencias e indicadores de desempeño.","Tiempo promedio de aprobación, para evaluar el objetivo de reducir tiempos de trámite.","Cada estadística debe responder a un objetivo específico.","Cada indicador está vinculado a un objetivo del sistema."],
+  ["Gráficos adecuados y correctos","Barras, circulares o líneas según el tipo de dato; sin gráficos decorativos.","Líneas para tendencia en el tiempo; barras para comparar categorías.","Etiqueta ejes y unidades y evita gráficos circulares con muchas categorías.","Los gráficos son legibles, usan datos reales y el tipo es el adecuado."]]}
+ ]},
+{id:9,name:"Administración de usuarios y permisos",short:"Usuarios y permisos",
+ imp:"Quien administra las cuentas controla la seguridad de todo el sistema; ese control debe ser seguro y trazable.",
+ obj:"Gestionar usuarios, roles y permisos de forma segura y coherente con los actores del análisis.",
+ fund:"Los roles administrados deben corresponderse con los actores y permisos definidos en el análisis.",
+ groups:[
+ {id:"9.1",name:"Gestión de usuarios",why:"Es el ciclo de vida de las cuentas.",reqs:[
+  ["Registro, consulta y modificación de usuarios","Crear, consultar y modificar usuarios con validaciones.","Formulario de usuarios con correo único y rol obligatorio.","Aplica las mismas validaciones de seguridad que en el resto del sistema.","El administrador puede gestionar usuarios y los datos quedan válidos."],
+  ["Activar, desactivar cuentas y asignar roles","Habilitar o deshabilitar cuentas y asignar roles y permisos sin eliminar usuarios.","Una cuenta desactivada no puede iniciar sesión pero conserva su historial.","Cierra las sesiones activas de un usuario al desactivarlo.","Los cambios de estado y de rol se aplican de inmediato."],
+  ["Restablecimiento seguro de contraseñas","Permitir restablecer contraseñas mediante mecanismos seguros.","El administrador genera un enlace temporal; nunca ve la contraseña.","Obliga a cambiar la contraseña en el siguiente ingreso.","Restablecer una contraseña no expone la nueva en texto visible ni la deja almacenada sin protección."]]},
+ {id:"9.2",name:"Roles y permisos",why:"Los permisos mal asignados son una de las causas más frecuentes de fallas de seguridad.",reqs:[
+  ["Actores, roles y acceso a módulos correspondientes","Cada actor del análisis tiene un rol y acceso solo a los módulos que le corresponden.","Actor «Supervisor» del análisis = rol Supervisor con acceso solo de lectura.","Compara la matriz de permisos con el análisis antes de la presentación.","Los roles implementados son los mismos actores del análisis."],
+  ["Protección de operaciones e información sensible","Las operaciones y datos delicados están restringidos y se validan en el servidor.","Solo el administrador puede cambiar roles; un operador no puede ver contraseñas ni datos de otros.","Registra los cambios de permisos en la bitácora.","Un usuario no puede ejecutar operaciones ni ver información de un rol superior."]]},
+ {id:"9.3",name:"Perfil del usuario",why:"Permite a cada usuario mantener su información sin recurrir al administrador.",reqs:[
+  ["Visualizar y actualizar datos personales; cambiar contraseña","Mostrar información del usuario, permitir actualizar datos autorizados, cambiar contraseña y ver su actividad.","Pantalla de perfil con teléfono editable y cambio de contraseña con la actual.","Los datos que afectan permisos (rol, estado) no deben ser editables por el propio usuario.","El usuario ve y actualiza solo los datos autorizados."],
+  ["Impedir modificar información ajena","Un usuario no puede modificar información que no le corresponde.","Cambiar el id del perfil en la petición no permite editar a otra persona.","Toma el identificador del usuario desde la sesión, no desde el formulario.","Las pruebas de manipulación de identificadores no permiten modificar datos de otros usuarios."]]}
+ ]},
+{id:10,name:"Bitácora y auditoría del sistema",short:"Bitácora y auditoría",
+ imp:"Cuando algo sale mal, la bitácora permite saber quién hizo qué, cuándo y sobre qué información.",
+ obj:"Registrar de forma segura las acciones relevantes para poder auditar los procesos.",
+ fund:"La bitácora debe permitir identificar quién realizó una operación, cuándo la realizó y sobre qué información actuó.",
+ groups:[
+ {id:"10.1",name:"Registro de actividades",why:"Lo que no se registra no se puede auditar.",reqs:[
+  ["Inicio y cierre de sesión","Registrar los accesos y salidas, incluidos los intentos fallidos.","Registro: usuario, fecha, IP y resultado del inicio de sesión.","Registra también los intentos fallidos para detectar ataques.","Cada inicio y cierre de sesión queda registrado."],
+  ["Creación, modificación y eliminación de registros","Registrar las operaciones de datos con el registro afectado.","Registro: «María modificó la solicitud 124 el 12/05 a las 10:30».","Si es útil, guarda valores anteriores y nuevos de campos críticos.","Las operaciones CRUD relevantes generan un evento."],
+  ["Cambios de permisos, acciones administrativas y operaciones críticas","Registrar todo lo que altera seguridad o procesos importantes.","Cambio de rol de un usuario o restauración de un respaldo.","Define una lista de acciones críticas del sistema y verifica que cada una se registre.","Las acciones críticas siempre quedan registradas."]]},
+ {id:"10.2",name:"Información de la bitácora",why:"Un registro incompleto no permite reconstruir los hechos.",reqs:[
+  ["Contenido completo del evento","Usuario, acción, fecha y hora, módulo, identificador del registro, resultado e información adicional.","Tabla bitacora(id, usuario, accion, modulo, id_registro, fecha_hora, resultado, detalle).","Usa la hora del servidor y no la del cliente.","Cada evento permite responder: quién, qué, cuándo, dónde y con qué resultado."]]},
+ {id:"10.3",name:"Seguridad de la bitácora",why:"Una bitácora modificable no sirve como evidencia.",reqs:[
+  ["Protección contra modificación y control de acceso","Los usuarios comunes no pueden modificar ni consultar la bitácora; solo los autorizados.","La aplicación no tiene permisos de UPDATE ni DELETE sobre la tabla de bitácora.","Considera enviarla a un almacenamiento aparte con permisos de solo escritura.","Ningún usuario común puede alterar ni acceder a la bitácora."],
+  ["Sin datos sensibles innecesarios","No se almacenan contraseñas ni información sensible que no sea necesaria.","Registrar «cambió su contraseña», nunca el valor de la contraseña.","Enmascara datos personales si deben registrarse.","La bitácora no contiene contraseñas ni datos sensibles innecesarios."],
+  ["Políticas de conservación","Se define cuánto tiempo se conserva y cómo se archiva la bitácora.","Conservar 12 meses en línea y archivar en un respaldo después.","Evita que la bitácora crezca sin control y afecte el rendimiento.","Existe una política de conservación escrita."]]}
+ ]},
+{id:11,name:"Respaldo y restauración",short:"Respaldo y restauración",
+ imp:"Un fallo técnico, un error humano o un incidente de seguridad pueden destruir la información; el respaldo es la última defensa.",
+ obj:"Contar con respaldos protegidos y un procedimiento de restauración que haya sido probado.",
+ fund:"La restauración de un sistema debe probarse, no simplemente asumirse como funcional.",
+ groups:[
+ {id:"11.1",name:"Respaldos",why:"Sin copias no hay recuperación posible.",reqs:[
+  ["Mecanismo y frecuencia de respaldo","Un mecanismo definido con una frecuencia acorde con la rapidez con que cambian los datos.","Respaldo diario automático de la base de datos con script programado.","Define la frecuencia según cuánta información se puede permitir perder.","Existe un mecanismo de respaldo y una frecuencia documentada."],
+  ["Identificación, protección y conservación de copias","Copias identificadas por fecha, almacenadas de forma segura y conservadas según una política.","Archivos nombrados respaldo_2026-10-24.sql en una ubicación no pública y con una copia externa.","Una copia en el mismo servidor no protege ante la pérdida del servidor.","Las copias están identificadas, protegidas y fuera del alcance público."]]},
+ {id:"11.2",name:"Restauración",why:"Un respaldo que no se puede restaurar no tiene valor.",reqs:[
+  ["Procedimiento de restauración documentado","Pasos para recuperar la información ante errores humanos, fallos, pérdida, corrupción o incidentes de seguridad.","Guía de pasos para restaurar la base de datos en un servidor limpio.","Escribe el procedimiento de modo que otra persona pueda ejecutarlo.","Existe un procedimiento escrito para cada tipo de incidente relevante."],
+  ["Restauración probada","La restauración se ejecutó realmente y se verificó que los datos recuperados son íntegros.","Se restauró una copia en un entorno de prueba y se compararon los totales de registros.","Programa pruebas periódicas de restauración.","Hay evidencia de al menos una restauración exitosa con verificación de integridad."]]},
+ {id:"11.3",name:"Consideraciones de seguridad",why:"Un respaldo desprotegido es una copia completa de los datos para quien lo obtenga.",reqs:[
+  ["Interfaz de respaldo y restauración protegida","Si existe interfaz: acceso restringido, sin archivos expuestos públicamente, validación de los archivos e integridad protegida.","Solo el administrador ve la pantalla; los archivos se validan antes de restaurar y se solicita confirmación.","Registra en la bitácora cada respaldo y restauración.","La interfaz exige autorización, no expone archivos por URL pública y valida el archivo antes de restaurar. Si no existe interfaz, márcalo como No aplica."]]}
+ ]}
+];
+
+const PRINCIPLES = [
+["Todo sistema debe responder a un problema real.",1],["Todo sistema debe cumplir con los objetivos planteados.",1],
+["La base de datos constituye un elemento fundamental del sistema.",2],["La base de datos debe ser estructurada, consistente y adecuadamente normalizada.",2],
+["La seguridad debe considerarse desde el diseño.",3],["Los formularios deben incorporar validaciones.",7],
+["Las funcionalidades deben corresponderse con los casos de uso.",1],["La interfaz debe mantener consistencia visual.",5],
+["El sistema debe ser responsive y compatible con navegadores modernos.",5],["Las operaciones CRUD deben responder a las necesidades del proceso.",6],
+["Los reportes deben aportar información útil.",8],["Los usuarios deben disponer de permisos adecuados.",9],
+["La información debe protegerse mediante mecanismos de respaldo.",11],["Las operaciones importantes deben poder auditarse.",10],
+["El sistema debe probarse antes de su presentación.",11],["La documentación debe facilitar su comprensión y mantenimiento.",2],
+["Todos los elementos del proyecto deben mantener coherencia e integridad.","resumen"],["El lenguaje de programación utilizado no debe determinar la calidad del sistema.","resumen"]
+];
+
+// Pares análisis → implementación para detectar inconsistencias: [origen, destino, descripción]
+const PAIRS = [
+["1.5","6.1","Casos de uso → formularios y funcionalidades"],
+["1.4","3.3","Actores → roles y control de acceso"],
+["1.4","9.2","Actores → roles y permisos administrados"],
+["1.3","2.1","Requerimientos → modelo de datos"],
+["2.1","6.5","Modelo de datos → formularios y operaciones CRUD"],
+["2.3","7.5","Integridad en la base de datos → validación de relaciones"],
+["3.3","4.3","Permisos → navegación coherente con el rol"],
+["6.4","10.1","Eliminación y modificación → bitácora de operaciones"],
+["1.2","8.4","Objetivos → estadísticas que los midan"],
+["8.1","8.2","Reportes por pantalla → reportes PDF"],
+["11.1","11.2","Respaldos → restauración probada"]
+];
+
+const CROSS = [
+"Cada caso de uso del análisis tiene una funcionalidad implementada que lo ejecuta.",
+"Cada funcionalidad implementada corresponde a un caso de uso del análisis.",
+"Cada entidad del modelo de datos se usa en al menos un formulario, consulta o proceso.",
+"Cada formulario guarda en tablas existentes, con campos, tipos y restricciones coherentes.",
+"Las relaciones del análisis (por ejemplo, una solicitud pertenece a un usuario) existen como claves foráneas y se usan en el código.",
+"Los permisos de cada actor definidos en el análisis son los mismos que se validan en el servidor.",
+"Las reglas de negocio de los requerimientos están validadas en el servidor y, cuando es posible, en la base de datos.",
+"Los reportes y estadísticas responden a objetivos específicos del proyecto.",
+"Los nombres de entidades, estados y roles son los mismos en el análisis, la base de datos, la interfaz y los reportes.",
+"Las acciones críticas identificadas en el análisis generan un registro en la bitácora."
+];
+
+const ST = {p:{l:"Pendiente",g:"○"},d:{l:"En desarrollo",g:"◐"},c:{l:"Cumplido",g:"●"},n:{l:"No aplica",g:"⊘"}};
+const PRESETS = ["#0F6B66","#1F4E9C","#7A2E4D","#B5541C","#5B4B9A","#2F5D3A"];
+
+/* ============ MODELO ============ */
+const REQS = [], GROUPS = {};
+MODS.forEach(m => m.groups.forEach(g => { g.mod = m; g.list = [];
+  g.reqs.forEach((r,i) => { const q = {id:g.id+"."+(i+1), title:r[0], desc:r[1], ex:r[2], rec:r[3], crit:r[4], g, m}; REQS.push(q); g.list.push(q); });
+  GROUPS[g.id] = g; }));
+MODS.forEach(m => m.list = REQS.filter(q => q.m === m));
+const REQBYID = Object.fromEntries(REQS.map(q => [q.id, q]));
+
+const KEY = "guia-sistemas-universitarios-v1";
+let S = loadState();
+function normS(){
+  S.team = Object.assign({codigo:"",proyecto:"",integrantes:[""]}, S.team||{});
+  if (!Array.isArray(S.team.integrantes) || !S.team.integrantes.length) S.team.integrantes = [""];
+  S.eval = Object.assign({notas:{},comentarios:{},general:"",enviadoEn:null,firma:""}, S.eval||{});
+}
+normS();
+function loadState(){
+  try { const j = JSON.parse(localStorage.getItem(KEY)); if (j && j.req) { j.meta = Object.assign({name:"",student:"",institution:"",accent:PRESETS[0]}, j.meta||{}); j.coh = j.coh||{}; return j; } } catch(e){}
+  return {meta:{name:"",student:"",institution:"",accent:PRESETS[0]}, req:{}, coh:{}};
+}
+let storageOk = true;
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){ storageOk = false; } }
+
+function rs(id){ const r = S.req[id]||{}; const s = r.s||"p"; return {s, note:r.note||"", na:r.na||"", naOk: s==="n" && (r.na||"").trim().length>0}; }
+function setReq(id, patch){ S.req[id] = Object.assign({}, S.req[id]||{}, patch); save(); }
+function stats(list){
+  let c=0,d=0,p=0,n=0,bad=0;
+  for (const q of list){ const r = rs(q.id);
+    if (r.s==="c") c++; else if (r.s==="d") d++; else if (r.s==="n"){ if (r.naOk) n++; else {p++; bad++;} } else p++; }
+  const t = list.length, app = t-n;
+  return {t,c,d,p,n,bad,app,pct: app ? Math.round(c/app*100) : null};
+}
+const pctTxt = v => v===null ? "—" : v+"%";
+function modDone(m){ const s = stats(m.list); return s.app>0 ? s.c===s.app : s.n===s.t; }
+function alerts(){
+  const out = [];
+  PAIRS.forEach(([a,b,txt]) => {
+    const A = stats(GROUPS[a].list), B = stats(GROUPS[b].list);
+    if (A.pct===null || B.pct===null) return;
+    if (B.c+B.d>0 && A.pct<50) out.push({kind:"up", a, b, txt, msg:"Hay avance en "+b+" «"+GROUPS[b].name+"» pero "+a+" «"+GROUPS[a].name+"» está en "+A.pct+"%. La implementación podría no corresponder al análisis."});
+    else if (A.pct===100 && B.c+B.d===0) out.push({kind:"down", a, b, txt, msg:a+" «"+GROUPS[a].name+"» está completo pero "+b+" «"+GROUPS[b].name+"» no se ha iniciado. ¿Falta implementarlo?"});
+  });
+  REQS.forEach(q => { const r = rs(q.id); if (r.s==="n" && !r.naOk) out.push({kind:"na", id:q.id, txt:"No aplica sin justificación", msg:q.id+" «"+q.title+"» está marcado como No aplica sin justificación, por lo que se cuenta como pendiente."}); });
+  return out;
+}
+
+/* ============ UTILIDADES ============ */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const $ = id => document.getElementById(id);
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>{t.hidden=true},3200); }
+function bar(s, sm){ const t=s.app||1; return '<div class="bar'+(sm?" sm":"")+'" role="img" aria-label="'+s.c+" cumplidos, "+s.d+" en desarrollo de "+s.app+' aplicables"><i class="c" style="width:'+(s.c/t*100)+'%"></i><i class="d" style="width:'+(s.d/t*100)+'%"></i></div>'; }
+function pill(k){ return '<span class="pill s-'+k+'">'+ST[k].g+" "+ST[k].l+"</span>"; }
+function hexOk(h){ return /^#[0-9a-fA-F]{6}$/.test(h); }
+function applyAccent(){
+  const h = hexOk(S.meta.accent) ? S.meta.accent : PRESETS[0];
+  const r=parseInt(h.slice(1,3),16), g=parseInt(h.slice(3,5),16), b=parseInt(h.slice(5,7),16);
+  const lum = (0.299*r+0.587*g+0.114*b)/255;
+  const st = document.documentElement.style;
+  st.setProperty("--accent", h); st.setProperty("--on-accent", lum>0.62 ? "#111" : "#fff");
+}
+function sysName(){ return S.meta.name.trim() || "Mi sistema"; }
+
+/* ============ ESTADO DE VISTA ============ */
+const VIEWS = ["resumen","equipo","autoeval","admin","pantallas","coherencia","principios","proyecto"].concat(MODS.map(m=>"m"+m.id));
+let view = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "resumen";
+let filter = "all", shotTab = "login", crudStep = "read";
+const openReq = new Set();
+let dl = null;
+let theme = null; // "light" | "dark" | null (sigue al sistema)
+try { const t = localStorage.getItem(KEY+"-theme"); if (t==="light"||t==="dark") theme = t; } catch(e){}
+function curTheme(){ return theme || (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"); }
+function applyTheme(){ const r = document.documentElement; if (theme) r.setAttribute("data-theme",theme); else r.removeAttribute("data-theme"); }
+function setTheme(t){ theme = t; try { localStorage.setItem(KEY+"-theme",t); } catch(e){} applyTheme(); render(); }
+
+function go(v, scrollTo){
+  if (!VIEWS.includes(v)) v = "resumen";
+  if (v !== view) filter = "all";
+  if (v === "admin") setTimeout(adminEnter, 0);
+  view = v; try { location.hash = v; } catch(e){}
+  closeMenu(); render();
+  if (scrollTo){ const el = $("r-"+scrollTo); if (el){ el.scrollIntoView({block:"center"}); } }
+  else window.scrollTo(0,0);
+}
+window.addEventListener("hashchange", () => { const v = location.hash.slice(1); if (VIEWS.includes(v) && v!==view){ view=v; filter="all"; closeMenu(); if (v==="admin") setTimeout(adminEnter,0); render(); window.scrollTo(0,0);} });
+
+/* ============ RENDER ============ */
+function renderSide(){
+  const all = stats(REQS), al = alerts().length;
+  let h = '<button class="btn sideclose" data-act="menuclose" aria-label="Cerrar menú">Cerrar ✕</button><div class="brand"><b>Guía de Construcción de Sistemas</b><span>Ingeniería Informática</span></div>';
+  const ct = curTheme();
+  h += '<div class="seg themeseg" role="group" aria-label="Tema de color">'+[["light","☀ Claro"],["dark","☾ Oscuro"]].map(([k,l])=>'<button type="button" data-act="theme" data-t="'+k+'" aria-pressed="'+(ct===k)+'">'+l+"</button>").join("")+"</div>";
+  h += '<div class="side-total"><div class="row"><span class="lbl">Avance general</span><span class="big">'+pctTxt(all.pct)+'</span></div>'+bar(all,true)+'<span class="small muted">'+all.c+" de "+all.app+" requisitos aplicables cumplidos</span></div>";
+  h += "<nav aria-label='Secciones'>";
+  const item = (v,n,t,p,cls,extra) => '<button class="nv" data-act="nav" data-v="'+v+'"'+(view===v?' aria-current="page"':"")+'><span class="n">'+n+'</span><span class="t">'+t+'</span>'+(extra||'<span class="p '+(cls||"")+'">'+p+"</span>")+"</button>";
+  h += item("resumen","▤","Resumen","");
+  h += '<div class="lbl navhead">Mi proyecto</div>';
+  h += item("equipo","◫","Mi equipo", S.team.codigo ? "✓" : "", S.team.codigo ? "done" : "");
+  h += item("autoeval","✎","Autoevaluación", S.eval.enviadoEn ? "✓" : "", S.eval.enviadoEn ? "done" : "");
+  h += '<div class="lbl navhead">Referencia</div>';
+  h += item("pantallas","▭","Pantallas modelo","");
+  h += '<div class="lbl navhead">Módulos</div>';
+  MODS.forEach(m => { const s = stats(m.list); h += item("m"+m.id, String(m.id).padStart(2,"0"), esc(m.short), pctTxt(s.pct), modDone(m)?"done":""); });
+  h += '<div class="lbl navhead">Verificación</div>';
+  h += item("principios","§","Principios","");
+  h += '<div class="lbl navhead">Docente</div>';
+  h += item("admin","⚿","Acceso docente", adm.logged ? "●" : "", adm.logged ? "done" : "");
+  h += "</nav>";
+  h += '<p class="persist">'+(storageOk?"El avance se guarda en este navegador y dispositivo. ":"El navegador bloquea el almacenamiento local: el avance se perderá al cerrar.")+"</p>";
+  $("side").innerHTML = h;
+  $("topPct").textContent = pctTxt(all.pct);
+  const cur = view.startsWith("m") && /^m\d+$/.test(view) ? MODS.find(m=>"m"+m.id===view).short : ({resumen:"Resumen",equipo:"Mi equipo",autoeval:"Autoevaluación",admin:"Acceso docente",pantallas:"Pantallas modelo",coherencia:"Coherencia",principios:"Principios",proyecto:"Proyecto y exportación"})[view];
+  $("topTitle").textContent = cur;
+}
+
+function render(){
+  const y = window.scrollY;
+  renderSide();
+  const main = $("main");
+  if (view==="resumen") main.innerHTML = vResumen();
+  else if (view==="pantallas") main.innerHTML = vPantallas();
+  else if (view==="coherencia") main.innerHTML = vCoherencia();
+  else if (view==="principios") main.innerHTML = vPrincipios();
+  else if (view==="proyecto") main.innerHTML = vProyecto();
+  else if (view==="equipo") main.innerHTML = vEquipo();
+  else if (view==="autoeval") main.innerHTML = vAutoeval();
+  else if (view==="admin") main.innerHTML = vAdmin();
+  else main.innerHTML = vModulo(MODS.find(m=>"m"+m.id===view));
+  window.scrollTo(0,y);
+}
+
+function vResumen(){
+  const all = stats(REQS), al = alerts();
+  const fin = MODS.filter(modDone), pen = MODS.filter(m=>!modDone(m));
+  let h = '<header class="mhead"><span class="kicker">'+esc(sysName())+(S.meta.institution.trim()?" · "+esc(S.meta.institution.trim()):"")+'</span><h1>Guía para construir un sistema informático universitario</h1>'+
+   '<p class="muted" style="max-width:68ch">Recorre las once etapas, marca el estado de cada requisito, registra observaciones y verifica que análisis, base de datos e implementación respondan a una misma necesidad. La tecnología que uses no es un criterio de evaluación: lo son la ingeniería, la seguridad, la integridad y la funcionalidad.</p></header>';
+  h += '<section class="stats" aria-label="Indicadores generales">'+
+    [["Requisitos",all.t,""],["Cumplidos",all.c,"var(--ok)"],["En desarrollo",all.d,"var(--dev)"],["Pendientes",all.p,"var(--pend)"],["No aplica",all.n,"var(--na)"],["Cumplimiento",pctTxt(all.pct),"var(--accent-text)"]]
+    .map(([k,v,c])=>'<div class="stat"><span class="v" style="'+(c?"color:"+c:"")+'">'+v+'</span><span class="k">'+k+"</span></div>").join("")+"</section>";
+  h += bar(all);
+  h += '<p class="small muted">El cumplimiento se calcula sobre los requisitos aplicables: los marcados «No aplica» con justificación se excluyen; sin justificación cuentan como pendientes.</p>';
+  // siguiente paso
+  const next = REQS.find(q => rs(q.id).s==="d") || REQS.find(q => { const s=rs(q.id).s; return s==="p" || (s==="n" && !rs(q.id).naOk); });
+  if (next) h += '<div class="panel"><header><div><span class="lbl">Siguiente paso sugerido</span><br><b>'+next.id+" · "+esc(next.title)+'</b> <span class="muted small">(Módulo '+next.m.id+")</span></div><button class=\"btn pri\" data-act=\"jump\" data-id=\""+next.id+'">Ir al requisito</button></header></div>';
+  h += '<section class="panel"><header><h2>Avance por módulo</h2></header>';
+  MODS.forEach(m => { const s=stats(m.list), done=modDone(m), k = done?"c":(s.c+s.d>0?"d":"p");
+    h += '<button class="mrow" data-act="nav" data-v="m'+m.id+'"><span class="nm"><span class="mono muted">'+String(m.id).padStart(2,"0")+"</span><span>"+esc(m.name)+'</span></span><span class="bw">'+bar(s,true)+'</span><span class="mono small pc">'+s.c+"/"+s.app+" · "+pctTxt(s.pct)+'</span><span class="st">'+(done?pill("c").replace("Cumplido","Finalizado"):(k==="d"?pill("d").replace("En desarrollo","En curso"):pill("p").replace("Pendiente","Sin iniciar")))+"</span></button>"; });
+  h += "</section>";
+  h += '<div class="cols2"><section class="panel"><header><h2>Módulos finalizados ('+fin.length+')</h2></header>'+(fin.length?'<ul class="list">'+fin.map(m=>'<li><button class="linkbtn" data-act="nav" data-v="m'+m.id+'">'+m.id+". "+esc(m.short)+"</button></li>").join("")+"</ul>":'<p class="muted small" style="padding:12px 16px">Aún no hay módulos finalizados.</p>')+"</section>";
+  h += '<section class="panel"><header><h2>Módulos pendientes ('+pen.length+')</h2></header>'+(pen.length?'<ul class="list">'+pen.map(m=>{const s=stats(m.list);return '<li><button class="linkbtn" data-act="nav" data-v="m'+m.id+'">'+m.id+". "+esc(m.short)+'</button><span class="muted small">'+(s.t-s.n-s.c)+" por cumplir</span></li>";}).join("")+"</ul>":'<p class="muted small" style="padding:12px 16px">Todos los módulos están finalizados.</p>')+"</section></div>";
+  h += '<div class="panel"><header><div><b>Pantallas modelo</b><br><span class="small muted">Esquemas anotados de inicio de sesión, dashboard, menús, base de datos, integridad, CRUD y respaldo.</span></div><button class="btn" data-act="nav" data-v="pantallas">Ver pantallas</button></header></div>';
+  return h;
+}
+
+function vModulo(m){
+  const s = stats(m.list);
+  let h = '<header class="mhead"><span class="kicker">Módulo '+m.id+" de "+MODS.length+"</span><h1>"+esc(m.name)+"</h1>"+
+   '<div class="stats" style="margin-top:4px">'+[["Cumplidos",s.c,"var(--ok)"],["En desarrollo",s.d,"var(--dev)"],["Pendientes",s.p,"var(--pend)"],["No aplica",s.n,"var(--na)"],["Avance",pctTxt(s.pct),"var(--accent-text)"]].map(([k,v,c])=>'<div class="stat"><span class="v" style="color:'+c+'">'+v+'</span><span class="k">'+k+"</span></div>").join("")+"</div>"+bar(s)+"</header>";
+  h += '<div class="meta"><div><span class="lbl">Importancia</span><p>'+esc(m.imp)+'</p></div><div><span class="lbl">Objetivo de la etapa</span><p>'+esc(m.obj)+"</p></div></div>";
+  h += '<div class="fund"><span class="lbl">Criterio fundamental</span><p>'+esc(m.fund)+"</p></div>";
+  if (MODSHOT[m.id]) h += '<div class="chips" style="align-items:center"><span class="small muted">Pantallas modelo de esta etapa:</span>'+MODSHOT[m.id].map(t=>'<button class="chip" data-act="openshot" data-t="'+t+'">'+esc(SHOTS.find(x=>x.id===t).label)+"</button>").join("")+"</div>";
+  const counts = {all:m.list.length}; Object.keys(ST).forEach(k=>counts[k]=m.list.filter(q=>rs(q.id).s===k).length);
+  h += '<div class="chips" role="group" aria-label="Filtrar por estado">'+[["all","Todos"],["p","Pendiente"],["d","En desarrollo"],["c","Cumplido"],["n","No aplica"]].map(([k,l])=>'<button class="chip" data-act="filter" data-f="'+k+'" aria-pressed="'+(filter===k)+'">'+l+" ("+counts[k]+")</button>").join("")+
+    '<button class="chip" data-act="expand" style="margin-left:auto">Expandir / contraer todo</button></div>';
+  let any = false;
+  m.groups.forEach(g => {
+    const list = g.list.filter(q => filter==="all" || rs(q.id).s===filter);
+    if (!list.length) return; any = true;
+    const gs = stats(g.list);
+    h += '<section class="group"><div class="ghead"><span class="gid">'+g.id+"</span><h2>"+esc(g.name)+'</h2><span class="gp">'+gs.c+"/"+gs.app+"</span></div><p class=\"muted small\"><b>Por qué importa:</b> "+esc(g.why)+"</p>";
+    list.forEach(q => h += reqHtml(q));
+    h += "</section>";
+  });
+  if (!any) h += '<p class="muted">Ningún requisito coincide con este filtro.</p>';
+  return h;
+}
+
+function reqHtml(q){
+  const r = rs(q.id), open = openReq.has(q.id);
+  const segs = Object.keys(ST).map(k => '<button type="button" role="radio" class="k-'+k+'" aria-checked="'+(r.s===k)+'" data-act="setst" data-id="'+q.id+'" data-s="'+k+'" title="Marcar como '+ST[k].l+'">'+ST[k].g+" "+ST[k].l+"</button>").join("");
+  let h = '<article class="req s-'+r.s+'" id="r-'+q.id+'"><div class="rhead"><span class="rid">'+q.id+'</span><button class="rtitle" data-act="toggle" data-id="'+q.id+'" aria-expanded="'+open+'" aria-controls="b-'+q.id+'"><span class="car">▸</span><span>'+esc(q.title)+'</span></button><div class="seg" role="radiogroup" aria-label="Estado de '+esc(q.title)+'">'+segs+"</div></div>";
+  if (open){
+    h += '<div class="rbody" id="b-'+q.id+'"><div class="dgrid"><div><span class="lbl">Qué es</span><p>'+esc(q.desc)+'</p></div><div><span class="lbl">Ejemplo práctico</span><p>'+esc(q.ex)+'</p></div><div><span class="lbl">Recomendación técnica</span><p>'+esc(q.rec)+'</p></div><div><span class="lbl">Importancia</span><p>'+esc(q.g.why)+'</p></div><div class="crit"><span class="lbl">Criterio de cumplimiento</span><p>'+esc(q.crit)+"</p></div></div>";
+    if (r.s==="n") h += '<div class="field"><label class="lbl" for="na-'+q.id+'">Justificación de «No aplica» (obligatoria para excluirlo del cálculo)</label><textarea id="na-'+q.id+'" data-na="'+q.id+'" placeholder="Explica por qué este requisito no corresponde a tu proyecto">'+esc(r.na)+'</textarea><span class="warn" id="nw-'+q.id+'"'+(r.naOk?" hidden":"")+'>Sin justificación este requisito se cuenta como pendiente.</span></div>';
+    h += '<div class="field"><label class="lbl" for="nt-'+q.id+'">Observaciones del estudiante</label><textarea id="nt-'+q.id+'" data-note="'+q.id+'" placeholder="Evidencias, decisiones, enlaces, pendientes...">'+esc(r.note)+"</textarea></div></div>";
+  }
+  return h + "</article>";
+}
+
+function vCoherencia(){
+  const al = alerts();
+  let h = '<header class="mhead"><span class="kicker">Verificación</span><h1>Coherencia del proyecto</h1><p class="muted" style="max-width:68ch">Todos los elementos del proyecto deben estar relacionados y responder a una misma necesidad. Las alertas se calculan con el avance que registraste; la lista de revisión cruzada la completas tú contrastando el sistema real.</p></header>';
+  h += '<section class="panel"><header><h2>Alertas detectadas ('+al.length+')</h2></header>';
+  if (!al.length) h += '<p class="muted" style="padding:14px 16px">No hay inconsistencias con el avance actual. Esto solo compara el avance registrado: verifica también la lista de revisión cruzada.</p>';
+  al.forEach(a => {
+    const lab = a.kind==="up" ? "Implementación sin base" : a.kind==="down" ? "Falta implementar" : "Sin justificación";
+    h += '<div class="alert"><span class="tag '+(a.kind==="up"?"up":"")+'">'+lab+'</span><div><p>'+esc(a.msg)+'</p><p class="small muted">'+esc(a.txt)+' · '+(a.kind==="na"?'<button class="linkbtn" data-act="jump" data-id="'+a.id+'">Ir al requisito</button>':'<button class="linkbtn" data-act="nav" data-v="m'+GROUPS[a.a].mod.id+'">Ir al origen ('+a.a+')</button> · <button class="linkbtn" data-act="nav" data-v="m'+GROUPS[a.b].mod.id+'">Ir al destino ('+a.b+")</button>")+"</p></div></div>";
+  });
+  h += "</section>";
+  const done = CROSS.filter((_,i)=>S.coh[i]).length;
+  h += '<section class="panel"><header><h2>Revisión cruzada</h2><span class="mono small muted">'+done+"/"+CROSS.length+" verificadas</span></header>";
+  CROSS.forEach((t,i)=> h += '<label class="chk"><input type="checkbox" data-coh="'+i+'"'+(S.coh[i]?" checked":"")+'><span>'+esc(t)+"</span></label>");
+  h += "</section>";
+  return h;
+}
+
+function vPrincipios(){
+  let h = '<header class="mhead"><span class="kicker">Fundamentos</span><h1>Principios de la guía</h1><p class="muted" style="max-width:68ch">Estos dieciocho principios resumen lo que se espera de un sistema bien construido. Cada uno remite al módulo donde se verifica.</p></header><section class="panel"><ol class="list princ">';
+  PRINCIPLES.forEach(([t,m]) => { const lab = m==="coh" ? "Coherencia" : m==="resumen" ? "Resumen" : "Módulo "+m; const v = m==="coh"?"coherencia":m==="resumen"?"resumen":"m"+m;
+    h += '<li><span>'+esc(t)+'</span><button class="linkbtn small" data-act="nav" data-v="'+v+'">'+lab+"</button></li>"; });
+  return h + "</ol></section>";
+}
+
+function vProyecto(){
+  const sw = PRESETS.map(c=>'<button class="sw" style="background:'+c+'" data-act="accent" data-c="'+c+'" aria-pressed="'+(S.meta.accent.toLowerCase()===c.toLowerCase())+'" aria-label="Color '+c+'"></button>').join("");
+  let h = '<header class="mhead"><span class="kicker">Configuración</span><h1>Proyecto y exportación</h1></header>';
+  h += '<section class="panel"><header><h2>Datos del proyecto</h2></header><div class="form-grid">'+
+   '<div class="field"><label class="lbl" for="mName">Nombre del sistema</label><input type="text" id="mName" data-meta="name" value="'+esc(S.meta.name)+'" placeholder="Ej.: Sistema de Gestión de Pasantías"></div>'+
+   '<div class="field"><label class="lbl" for="mStu">Estudiante o equipo</label><input type="text" id="mStu" data-meta="student" value="'+esc(S.meta.student)+'" placeholder="Nombre y apellido"></div>'+
+   '<div class="field"><label class="lbl" for="mIns">Institución</label><input type="text" id="mIns" data-meta="institution" value="'+esc(S.meta.institution)+'" placeholder="Universidad, facultad o empresa"></div>'+
+   '<div class="field"><span class="lbl">Color institucional de la guía</span><div class="swatches">'+sw+'<input type="color" id="mAcc" value="'+(hexOk(S.meta.accent)?S.meta.accent:PRESETS[0])+'" aria-label="Elegir otro color" data-meta="accent"></div></div></div></section>';
+  h += '<section class="panel"><header><h2>Resumen del avance</h2></header><div class="actions">'+
+   '<button class="btn pri" data-act="pdf"'+(dl?"":" disabled")+'>Descargar resumen en PDF</button>'+
+   '<button class="btn" data-act="csv"'+(dl?"":" disabled")+'>Exportar requisitos (CSV)</button>'+
+   '<button class="btn" data-act="copy">Copiar resumen como texto</button></div>'+
+   (dl?"":'<p class="small muted" style="padding:0 16px 14px">Las descargas no están disponibles en esta vista; usa «Copiar resumen como texto».</p>')+
+   '<div id="copyBox" style="padding:0 16px 16px" hidden><label class="lbl" for="copyTa">Resumen (selecciona y copia)</label><textarea id="copyTa" readonly style="min-height:160px"></textarea></div></section>';
+  h += '<section class="panel"><header><h2>Copia de respaldo del progreso</h2></header><p class="small muted" style="padding:12px 16px 0">El avance vive en este navegador y dispositivo. Para pasarlo a otro equipo o conservarlo, descarga la copia e impórtala allí.</p><div class="actions">'+
+   '<button class="btn" data-act="json"'+(dl?"":" disabled")+'>Descargar copia (JSON)</button><button class="btn" data-act="import">Importar copia</button><input type="file" id="impFile" accept=".json,application/json" hidden></div></section>';
+  h += '<section class="panel"><header><h2>Reiniciar</h2></header><div class="actions"><button class="btn danger" data-act="reset" id="resetBtn">Borrar todo el avance</button></div></section>';
+  return h;
+}
+
+/* ============ EXPORTACIÓN ============ */
+function today(){ return new Date().toLocaleDateString("es-ES",{year:"numeric",month:"long",day:"numeric"}); }
+function fname(ext){ return (sysName().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"proyecto")+"-avance."+ext; }
+function summaryText(){
+  const all = stats(REQS); let t = "RESUMEN DE AVANCE - "+sysName()+"\n";
+  if (S.meta.student.trim()) t += "Estudiante/equipo: "+S.meta.student.trim()+"\n";
+  if (S.meta.institution.trim()) t += "Institución: "+S.meta.institution.trim()+"\n";
+  t += "Fecha: "+today()+"\n\nCumplimiento: "+pctTxt(all.pct)+" ("+all.c+" cumplidos, "+all.d+" en desarrollo, "+all.p+" pendientes, "+all.n+" no aplica de "+all.t+")\n";
+  MODS.forEach(m => { const s=stats(m.list); t += "\nMÓDULO "+m.id+". "+m.name+" - "+pctTxt(s.pct)+"\n";
+    m.list.forEach(q => { const r=rs(q.id); t += " ["+ST[r.s].l+"] "+q.id+" "+q.title+"\n"; if (r.s==="n" && r.na.trim()) t += "     Justificación: "+r.na.trim()+"\n"; if (r.note.trim()) t += "     Observación: "+r.note.trim()+"\n"; }); });
+  const al = alerts(); if (al.length){ t += "\nALERTAS DE COHERENCIA\n"; al.forEach(a=>t+=" - "+a.msg+"\n"); }
+  return t;
+}
+async function save_(filename, data){
+  if (!dl){
+    const tipo = filename.endsWith(".pdf") ? "application/pdf" : filename.endsWith(".csv") ? "text/csv;charset=utf-8" : "application/json";
+    const u = URL.createObjectURL(new Blob([data],{type:tipo})), a = document.createElement("a");
+    a.href = u; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),2000);
+    toast("Archivo listo: "+filename); return;
+  }
+  try { await dl.save({filename, data}); toast("Archivo listo: "+filename); }
+  catch(e){ if (e && e.code==="declined") toast("Descarga cancelada."); else toast("No se pudo guardar el archivo."); }
+}
+function makePDF(){
+  const { jsPDF } = window.jspdf; const doc = new jsPDF({unit:"mm",format:"a4"});
+  const W=210,H=297,M=18,LW=W-2*M; let y=M;
+  const hex = hexOk(S.meta.accent)?S.meta.accent:PRESETS[0];
+  const acc=[parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)];
+  const col = {p:[107,119,115],d:[168,104,11],c:[27,127,70],n:[79,99,160]};
+  const need = h => { if (y+h>H-M-4){ doc.addPage(); y=M; } };
+  const text = (s,size,style,color,indent,gap) => { doc.setFont("helvetica",style||"normal"); doc.setFontSize(size); doc.setTextColor.apply(doc,color||[24,33,31]);
+    const lines = doc.splitTextToSize(String(s), LW-(indent||0)); const lh = size*0.43;
+    lines.forEach(l => { need(lh+1); doc.text(l, M+(indent||0), y); y+=lh+0.9; }); y += (gap||0); };
+  doc.setFillColor.apply(doc,acc); doc.rect(0,0,W,5,"F");
+  y=16; text("Resumen de avance del proyecto",20,"bold",acc,0,1);
+  text(sysName(),13,"bold",null,0,1);
+  if (S.meta.student.trim()) text("Estudiante o equipo: "+S.meta.student.trim(),10,"normal",null,0,0);
+  if (S.meta.institution.trim()) text("Institución: "+S.meta.institution.trim(),10,"normal",null,0,0);
+  text("Fecha de generación: "+today(),10,"normal",[86,99,95],0,4);
+  const all = stats(REQS);
+  text("Cumplimiento general: "+pctTxt(all.pct),14,"bold",null,0,1);
+  text("Total de requisitos: "+all.t+"   Cumplidos: "+all.c+"   En desarrollo: "+all.d+"   Pendientes: "+all.p+"   No aplica (justificados): "+all.n,10,"normal",null,0,3);
+  need(8); doc.setDrawColor(213,221,218); doc.line(M,y,W-M,y); y+=5;
+  text("Avance por módulo",12,"bold",acc,0,1);
+  MODS.forEach(m => { const s=stats(m.list); text(m.id+". "+m.name+" - "+pctTxt(s.pct)+" ("+s.c+" de "+s.app+" aplicables)"+(modDone(m)?" - Finalizado":""),10,"normal",null,2,0); });
+  y+=4;
+  MODS.forEach(m => {
+    need(24); doc.setDrawColor.apply(doc,acc); doc.setLineWidth(0.5); doc.line(M,y,W-M,y); y+=5;
+    text("Módulo "+m.id+". "+m.name,13,"bold",acc,0,1);
+    text("Avance: "+pctTxt(stats(m.list).pct),10,"normal",[86,99,95],0,2);
+    [["c","Cumplidos"],["d","En desarrollo"],["p","Pendientes"],["n","No aplica"]].forEach(([k,lab]) => {
+      const items = m.list.filter(q => { const r=rs(q.id); return k==="p" ? (r.s==="p"||(r.s==="n"&&!r.naOk)) : k==="n" ? (r.s==="n"&&r.naOk) : r.s===k; });
+      if (!items.length) return;
+      text(lab+" ("+items.length+")",10.5,"bold",col[k],0,0.5);
+      items.forEach(q => { const r=rs(q.id);
+        text(q.id+"  "+q.title,10,"normal",null,3,0);
+        if (r.s==="n" && r.na.trim()) text("Justificación: "+r.na.trim(),9,"italic",[86,99,95],9,0);
+        if (r.s==="n" && !r.naOk) text("Marcado No aplica sin justificación.",9,"italic",[179,50,31],9,0);
+        if (r.note.trim()) text("Observación: "+r.note.trim(),9,"italic",[86,99,95],9,0); });
+      y+=2; });
+    y+=2;
+  });
+  const al = alerts();
+  if (al.length){ need(20); doc.setDrawColor.apply(doc,acc); doc.line(M,y,W-M,y); y+=5; text("Alertas de coherencia",13,"bold",acc,0,1); al.forEach(a=>text("- "+a.msg,10,"normal",null,2,1)); }
+  const n = doc.getNumberOfPages();
+  for (let i=1;i<=n;i++){ doc.setPage(i); doc.setFont("helvetica","normal"); doc.setFontSize(8.5); doc.setTextColor(120,130,126);
+    doc.text(sysName()+" - Guía de Construcción de Sistemas",M,H-9); doc.text("Página "+i+" de "+n,W-M,H-9,{align:"right"}); }
+  return doc.output("arraybuffer");
+}
+function makeCSV(){
+  const q = v => '"'+String(v).replace(/"/g,'""')+'"';
+  const rows = [["Módulo","Grupo","Código","Requisito","Estado","Justificación No aplica","Observaciones"]];
+  REQS.forEach(r => { const s=rs(r.id); rows.push([r.m.id+". "+r.m.name, r.g.id+" "+r.g.name, r.id, r.title, ST[s.s].l, s.na, s.note]); });
+  return "﻿"+rows.map(r=>r.map(q).join(",")).join("\r\n");
+}
+
+/* ============ PANTALLAS MODELO (SVG) ============ */
+const sx = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const T = (x,y,s,c,sz,a) => '<text x="'+x+'" y="'+y+'" font-size="'+(sz||12)+'" class="t '+(c||"")+'"'+(a?' text-anchor="'+a+'"':"")+">"+sx(s)+"</text>";
+const R = (x,y,w,h,c,rx) => '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" rx="'+(rx==null?6:rx)+'" class="'+(c||"f s")+'"/>';
+const L = (x1,y1,x2,y2,c) => '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" class="'+(c||"s")+'"/>';
+const A = (d,dashed) => '<path d="'+d+'" class="arr'+(dashed?" arrd":"")+'" marker-end="url(#ah)"/>';
+const BTN = (x,y,w,l,pri,h) => R(x,y,w,h||28,pri?"fa":"f s",5)+T(x+w/2,y+(h||28)/2+4,l,pri?"ta tb":"tb",12,"middle");
+const INP = (x,y,w,lab,val,ph,err,dis) => T(x,y-6,lab,"tm",11)+R(x,y,w,30,err?"f serr":(dis?"f2 s":"f s"),5)+T(x+10,y+19,val,(ph||dis)?"tm":"",12);
+const MK = (n,x,y) => '<circle cx="'+x+'" cy="'+y+'" r="11" class="mk"/><text x="'+x+'" y="'+(y+4)+'" font-size="12" text-anchor="middle" class="mkt">'+n+"</text>";
+const PILL = (x,y,k,l) => { const w = Math.round(l.length*6.2+18); return R(x,y,w,18,"pl-"+k,9)+T(x+w/2,y+13,l,"pt-"+k+" tb",11,"middle"); };
+const SK = (x,y,w,h,acc) => R(x,y,w,h,acc?"lna":"ln",3);
+const DEFS = '<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="arrf"/></marker></defs>';
+function SV(w,h,label,inner){ return '<div class="svg-wrap"><svg viewBox="0 0 '+w+" "+h+'" role="img" aria-label="'+esc(label)+'" xmlns="http://www.w3.org/2000/svg">'+DEFS+inner+"</svg></div>"; }
+function BR(w,h,url,inner){
+  const id = "cl"+w+"x"+h;
+  return '<clipPath id="'+id+'"><rect width="'+w+'" height="'+h+'" rx="8"/></clipPath><g clip-path="url(#'+id+')">'+R(0,0,w,h,"f",0)+inner+R(0,0,w,28,"f2",0)+L(0,28,w,28)+
+   '<circle cx="16" cy="14" r="4" class="dot"/><circle cx="30" cy="14" r="4" class="dot"/><circle cx="44" cy="14" r="4" class="dot"/>'+R(70,6,w-120,17,"f s",8)+
+   '<rect x="78" y="12" width="8" height="6" class="arrf"/><path d="M79.5 12 v-2 a2.5 2.5 0 0 1 5 0 v2" class="arr" style="stroke-width:1"/>'+T(92,18,url,"tm mono",10.5)+"</g>"+R(0.5,0.5,w-1,h-1,"fn s",8);
+}
+const SHELL = (title) => { // barra lateral esquemática + encabezado de las pantallas de CRUD
+  let s = R(1,29,108,400,"f2",0)+L(109,29,109,429)+R(10,40,24,24,"fas sa",5)+SK(42,48,56,8,0);
+  [0,1,2,3,4].forEach(i => { const y=84+i*28; if(i===1) s += R(6,y-6,98,22,"fas",5); s += SK(16,y,i===1?64:50+((i*13)%24),8,i===1); });
+  return s + T(130,58,title,"tb",15);
+};
+
+function svgLogin(){
+  let s = "";
+  s += R(50,52,300,340,"f s",8)+R(175,68,50,50,"fas sa",10)+T(200,99,"UNI","tb ac",14,"middle");
+  s += T(200,142,"Sistema de Pasantías","tb",15,"middle")+T(200,159,"Facultad de Ingeniería","tm",11.5,"middle");
+  s += INP(75,190,250,"Correo institucional","estudiante@univ.edu")+INP(75,246,250,"Contraseña","••••••••••");
+  s += R(75,288,250,26,"errbg",5)+T(87,305,"Credenciales incorrectas","err tb",11.5);
+  s += BTN(75,326,250,"Iniciar sesión",1,32)+T(200,378,"¿Olvidó su contraseña?","ac",11.5,"middle");
+  s += T(390,70,"Qué ocurre en el servidor al enviar","tb",13);
+  [["Valida el formato de los datos recibidos","Rechaza campos vacíos o malformados"],["Busca al usuario con consulta parametrizada","Sin concatenar texto: evita inyección SQL"],["Compara la clave con el hash guardado","Argon2id o bcrypt; nunca texto plano"],["Crea una sesión nueva y registra el evento","Cookie HttpOnly, Secure y bitácora"],["Cuenta los intentos fallidos","5 fallos seguidos: bloqueo temporal"]].forEach((r,i) => {
+    const y = 86+i*58; s += R(390,y,310,44,"f s",6)+T(404,y+19,r[0],"tb",12)+T(404,y+35,r[1],"tm",11); if(i<4) s += A("M545 "+(y+44)+" V"+(y+58));
+  });
+  const frame = BR(720,420,"https://sistema.universidad.edu/login",s);
+  return SV(720,420,"Maqueta de la pantalla de inicio de sesión",frame+MK(1,172,66)+MK(2,338,205)+MK(3,338,261)+MK(4,338,301)+MK(5,338,342)+MK(6,296,373)+MK(7,690,14));
+}
+
+function svgAcceso(){
+  let s = "";
+  [[90,"Navegador"],[360,"Servidor"],[630,"Base de datos"]].forEach(([x,n]) => { s += R(x-60,12,120,30,"fas sa",6)+T(x,32,n,"tb ac",12.5,"middle")+L(x,42,x,340,"dash"); });
+  s += A("M90 78 H358")+T(224,70,"POST /solicitudes/124/aprobar","mono",11,"middle")+T(224,94,"con la cookie de sesión","tm",10.5,"middle");
+  s += R(385,60,215,140,"f s",6);
+  ["¿Sesión válida y vigente?","¿El rol permite aprobar?","¿El registro está en su ámbito?","¿Los datos y el estado lo permiten?"].forEach((t,i) => { s += T(430,90+i*32,t,"",12); });
+  s += A("M360 262 H628")+T(494,254,"BEGIN · UPDATE solicitud · INSERT bitacora · COMMIT","mono",10,"middle");
+  s += A("M630 292 H362",1)+T(494,284,"OK","tm",11,"middle");
+  s += A("M360 322 H92",1)+T(226,314,"200 · solicitud aprobada","tm",11,"middle");
+  s += R(20,352,680,56,"errbg",6)+T(34,375,"Si falla cualquier verificación: respuesta 401, 403 o 422, sin tocar la base de datos y con el intento registrado.","err tb",11.5)+T(34,394,"Ocultar el botón en la pantalla nunca reemplaza estas verificaciones.","err",11.5);
+  let m = ""; for (let i=0;i<4;i++) m += MK(i+1,406,86+i*32);
+  return SV(720,420,"Secuencia de validaciones de acceso en el servidor",s.replace(/(<text x="430")/g,"$1")+m.replace(/cx="406"/g,'cx="404"'));
+}
+
+function svgDash(){
+  let s = R(0,28,150,422,"f2",0)+L(150,28,150,450);
+  s += R(14,42,28,28,"fas sa",6)+T(28,61,"U","tb ac",13,"middle")+T(50,54,"Pasantías","tb",12)+T(50,67,"Fac. Ingeniería","tm",10);
+  [["Inicio",0],["Solicitudes",0],["Empresas",0],["Reportes",0],["Usuarios",1],["Bitácora",1],["Respaldo",1]].forEach((it,i) => { const y=92+i*32; if(i===0) s += R(8,y,134,26,"fas",5); s += T(20,y+17,it[0],i===0?"tb ac":"",12); if(it[1]) s += T(136,y+17,"admin","tm",9.5,"end"); });
+  s += T(170,57,"Inicio","tb",16)+L(150,76,720,76);
+  s += '<circle cx="540" cy="52" r="13" class="fa"/>'+T(540,56,"MP","ta tb",10.5,"middle")+T(560,49,"María Pérez","tb",11.5)+T(560,63,"Coordinadora","tm",10)+BTN(650,40,50,"Salir",0,24);
+  [["Pendientes","12","dv"],["Aprobadas","48","ok"],["Rechazadas","5","err"],["Tiempo promedio","3,2 d","ac"]].forEach((k,i) => { const x=170+i*136; s += R(x,92,122,62,"f s",6)+T(x+12,112,k[0],"tm",11)+T(x+12,141,k[1],"mono tb "+k[2],22); });
+  s += R(170,172,260,196,"f s",6)+T(184,194,"Solicitudes por mes","tb",12)+L(184,340,416,340);
+  [58,84,70,108,94,128].forEach((v,i) => { s += R(194+i*35,340-v,24,v,"lna",3)+T(206+i*35,354,["Ene","Feb","Mar","Abr","May","Jun"][i],"tm",10,"middle"); });
+  s += R(446,172,254,196,"f s",6)+T(460,194,"Últimas solicitudes","tb",12);
+  [["#128 · Pérez, A.","d","Pendiente"],["#127 · Gómez, L.","c","Aprobada"],["#126 · Ruiz, M.","c","Aprobada"],["#125 · Díaz, J.","b","Rechazada"]].forEach((r,i) => { const y=212+i*38; s += L(446,y-6,700,y-6)+T(460,y+14,r[0],"",11.5)+PILL(612,y,r[1],r[2]); });
+  s += R(170,384,530,52,"warnbg",6)+T(184,407,"Aviso: 3 solicitudes llevan más de 5 días sin respuesta","dv tb",12)+T(184,424,"Ver solicitudes atrasadas","ac",11.5);
+  return SV(720,450,"Maqueta del dashboard principal",BR(720,450,"https://sistema.universidad.edu/inicio",s)+MK(1,138,56)+MK(2,138,140)+MK(3,522,34)+MK(4,166,92)+MK(5,426,176)+MK(6,696,388)+MK(7,696,176));
+}
+
+function svgMenus(){
+  const panel = (x,y,n,title,inner) => T(x+22,y-10,title,"tb",12.5)+R(x,y,330,190,"f s",6)+inner+MK(n,x+8,y-14);
+  let s = "";
+  // 1 lateral
+  let a = R(21,33,78,188,"f2",0)+L(99,33,99,221); [0,1,2,3,4].forEach(i=>a+=SK(31,50+i*24,i===0?52:44,9,i===0)); a += SK(116,48,120,12)+R(116,72,220,0.1,"s")+[0,1,2,3].map(i=>SK(116,84+i*28,210,14)).join("");
+  s += panel(20,32,1,"Lateral izquierdo",a);
+  // 2 horizontal con pestañas
+  let b = R(371,33,328,26,"f2",0)+SK(381,42,40,9,0)+SK(640,42,48,9,0)+L(371,59,699,59);
+  ["Inicio","Solicitudes","Reportes","Admin"].forEach((t,i)=>{ b += T(384+i*76,76,t,i===0?"tb ac":"tm",11.5); }); b += R(380,81,50,2.5,"lna",1)+L(371,86,699,86)+SK(386,100,120,12)+[0,1,2].map(i=>SK(386,124+i*28,300,14)).join("");
+  s += panel(370,32,2,"Horizontal con pestañas",b);
+  // 3 superior con desplegable
+  let c = R(21,263,328,26,"f2",0)+SK(31,272,40,9,0); ["Gestión ▾","Reportes","Usuarios"].forEach((t,i)=>{ c += T(96+i*72,280,t,i===0?"tb ac":"tm",11.5); });
+  c += R(91,290,100,70,"f s",5)+T(101,309,"Solicitudes","",11.5)+T(101,328,"Empresas","",11.5)+T(101,347,"Tutores","",11.5)+SK(36,306,40,10)+SK(210,316,120,12)+[0,1].map(i=>SK(210,340+i*24,120,12)).join("");
+  s += panel(20,262,3,"Superior con desplegables",c);
+  // 4 combinada
+  let d = R(371,263,328,26,"f2",0)+SK(381,272,34,9,0)+R(450,268,120,16,"f s",8)+'<circle cx="672" cy="276" r="8" class="fa"/>'+L(371,289,699,289)+R(371,290,70,162,"f2",0)+L(441,290,441,452);
+  [0,1,2,3,4].forEach(i=>d+=SK(381,304+i*22,i===0?44:36,9,i===0)); d += SK(456,304,110,12)+[0,1,2].map(i=>SK(456,328+i*28,230,14)).join("");
+  s += panel(370,262,4,"Combinada (superior y lateral)",d);
+  return SV(720,470,"Cuatro patrones de menú de navegación",s);
+}
+
+const ENT = (x,y,w,name,rows) => { let s = R(x,y,w,26+rows.length*20,"f s",6)+R(x,y,w,26,"fas sa",6)+T(x+10,y+18,name,"tb mono ac",12);
+  rows.forEach((r,i) => { const yy=y+26+i*20; s += L(x,yy,x+w,yy)+T(x+10,yy+14,r[0],"mono",11.5)+(r[1]?T(x+w-8,yy+14,r[1],"mono ac tb",10.5,"end"):""); }); return s; };
+function svgER(){
+  let s = ENT(20,30,150,"ROL",[["id_rol","PK"],["nombre","UQ"]])+ENT(20,260,150,"ESTADO",[["id_estado","PK"],["nombre","UQ"]])+
+   ENT(215,30,175,"USUARIO",[["id_usuario","PK"],["nombre",""],["correo","UQ"],["clave_hash",""],["id_rol","FK"],["activo",""]])+
+   ENT(440,30,200,"SOLICITUD",[["id_solicitud","PK"],["id_usuario","FK"],["id_empresa","FK"],["id_estado","FK"],["fecha_inicio",""],["fecha_fin",""],["observaciones",""]])+
+   ENT(440,270,200,"EMPRESA",[["id_empresa","PK"],["nombre",""],["rif","UQ"],["activa",""]]);
+  s += A("M170 56 H192 V146 H213")+T(176,50,"1","tb",11)+T(198,140,"N","tb",11);
+  s += A("M390 66 H415 V86 H438")+T(394,60,"1","tb",11)+T(420,80,"N","tb",11);
+  s += A("M540 270 V198")+T(546,262,"1","tb",11)+T(546,214,"N","tb",11);
+  s += A("M170 290 H415 V126 H438")+T(176,284,"1","tb",11)+T(424,140,"N","tb",11);
+  s += T(20,414,"PK clave primaria","mono",11)+T(170,414,"FK clave foránea","mono",11)+T(320,414,"UQ valor único","mono",11)+T(450,414,"1 → N: un registro se relaciona con muchos","tm",11);
+  return SV(720,430,"Modelo entidad-relación de ejemplo",s+MK(1,402,36)+MK(2,203,66)+MK(3,402,146)+MK(4,566,236)+MK(5,402,106)+MK(6,186,252));
+}
+function svgNorm(){
+  let s = T(15,22,"Antes: una sola tabla","tb",13)+T(430,22,"Después: cada dato en un solo lugar","tb",13);
+  const cols = [["id",28],["estudiante",90],["empresa",80],["tel_empresa",72],["tel1",56],["tel2",56]];
+  let x=15; const xs=[]; cols.forEach(c=>{ xs.push(x); x+=c[1]; });
+  s += R(15,36,382,26,"f2 s",0); cols.forEach((c,i)=> s += T(xs[i]+6,53,c[0],"tb mono",10.5));
+  [["1","Pérez, A.","Acme C.A.","0212-555","0414-111","—"],["2","Gómez, L.","Acme C.A.","0212-555","0412-222","0416-333"],["3","Ruiz, M.","Beta S.A.","0241-777","0414-444","—"]].forEach((r,j)=>{ const y=62+j*26; s += R(15,y,382,26,"f s",0); r.forEach((v,i)=> s += T(xs[i]+6,y+17,v,"mono",10.5)); });
+  s += R(xs[4]-1,36,114,104,"fn serr",4)+R(xs[2]-1,36,152,104,"fn serr",4);
+  s += T(15,162,"1FN: teléfonos repetidos en columnas (tel1, tel2).","err",11.5)+T(15,182,"3FN: el teléfono depende de la empresa y se repite por solicitud.","err",11.5)+T(15,202,"Anomalía: si Acme cambia de teléfono, hay que corregir N filas.","err",11.5);
+  s += A("M404 110 H424");
+  [["SOLICITUD","id_solicitud, id_estudiante, id_empresa"],["EMPRESA","id_empresa, nombre, telefono"],["TELEFONO_ESTUDIANTE","id, id_estudiante, numero"]].forEach((e,i)=>{ const y=34+i*70; s += R(430,y,275,58,"f s",6)+R(430,y,275,24,"fas sa",6)+T(440,y+16,e[0],"tb mono ac",11.5)+T(440,y+44,e[1],"mono",11); });
+  return SV(720,250,"Ejemplo de normalización: antes y después",s);
+}
+
+function svgCapas(){
+  let s = R(40,18,170,28,"f s",14)+T(125,36,"Desde el formulario","tb",11.5,"middle")+R(290,18,170,28,"f s",14)+T(375,36,"Script o petición manual","tb",11.5,"middle");
+  s += R(20,78,200,196,"f s",8)+R(20,78,200,28,"fas sa",8)+T(34,97,"Formulario (cliente)","tb ac",12.5);
+  s += T(34,132,"✔ Campos obligatorios llenos","",11.5)+T(34,154,"✔ Formato de fecha válido","",11.5)+T(34,184,"Ayuda al usuario y ahorra","tm",11)+T(34,200,"viajes, pero cualquiera","tm",11)+T(34,216,"puede saltárselo.","tm",11);
+  s += R(260,78,200,196,"f s",8)+R(260,78,200,28,"fas sa",8)+T(274,97,"Servidor","tb ac",12.5);
+  s += T(274,132,"✔ Sesión y permisos","",11.5)+R(270,146,180,48,"errbg",5)+T(280,165,"✖ fecha_fin anterior a","err tb",11.5)+T(280,182,"fecha_inicio: rechazada","err tb",11.5)+T(274,222,"Es el control real: valida","tm",11)+T(274,238,"aunque el cliente lo permita.","tm",11);
+  s += R(500,78,200,196,"f s",8)+R(500,78,200,28,"fas sa",8)+T(514,97,"Base de datos","tb ac",12.5);
+  s += T(514,132,"CHECK (fecha_fin >= inicio)","mono",10.5)+T(514,152,"FOREIGN KEY · UNIQUE","mono",10.5)+T(514,172,"NOT NULL · tipos de dato","mono",10.5)+T(514,204,"Última defensa: mantiene las","tm",11)+T(514,220,"reglas aunque falle todo","tm",11)+T(514,236,"lo demás.","tm",11);
+  s += A("M125 46 V76")+A("M375 46 V76")+A("M220 176 H258")+A("M460 176 H498");
+  s += T(20,310,"Cuatro tipos de integridad que la base de datos debe garantizar","tb",12.5);
+  [["Entidad","Clave primaria no nula"],["Referencial","FK a un registro real"],["Dominio","Solo valores permitidos"],["Unicidad","Correo y cédula únicos"]].forEach((c,i)=>{ const x=20+i*174; s += R(x,322,162,46,"f s",6)+T(x+10,341,c[0],"tb ac",12)+T(x+10,358,c[1],"tm",10.5); });
+  return SV(720,384,"Capas de validación e integridad",s+MK(1,28,92)+MK(2,268,92)+MK(3,508,92)+MK(4,12,306));
+}
+function svgBorrado(){
+  let s = T(20,24,"DELETE FROM usuario WHERE id = 7","mono tb",11.5);
+  s += R(20,36,210,70,"f s",6)+R(20,36,210,24,"fas sa",6)+T(30,52,"USUARIO","tb mono ac",11.5)+R(24,62,202,22,"warnbg",3)+T(32,77,"7 · María Pérez","mono dv tb",11)+T(32,98,"9 · Luis Gómez","mono tm",11);
+  s += R(20,126,210,98,"f s",6)+R(20,126,210,24,"fas sa",6)+T(30,142,"SOLICITUD (id · id_usuario)","tb mono ac",10.5)+T(32,168,"124 · 7","mono",11)+T(32,186,"125 · 7","mono",11)+T(32,204,"130 · 9","mono tm",11);
+  s += L(80,106,80,126,"sa")+A("M236 90 H274");
+  [["ON DELETE RESTRICT","Rechaza: el usuario 7 tiene solicitudes. Es lo más seguro para datos históricos.","c"],["ON DELETE CASCADE","Borra también 124 y 125: se pierde el historial. Solo para datos subordinados.","b"],["ON DELETE SET NULL","Deja 124 y 125 sin responsable: registros huérfanos de significado.","d"],["Eliminación lógica","activo = 0: el usuario no entra, pero el historial queda intacto.","c"]].forEach((o,i)=>{ const y=30+i*60; s += R(280,y,420,50,"f s",6)+T(294,y+20,o[0],"tb mono",11.5)+T(294,y+38,o[1],"tm",11)+R(280,y,4,50,"pl-"+o[2],0); });
+  return SV(720,282,"Reglas de eliminación e integridad referencial",s);
+}
+
+function svgCrud(step){
+  const url = "https://sistema.universidad.edu/solicitudes";
+  const list = () => { let s = SHELL("Solicitudes");
+    s += R(130,72,196,28,"f s",5)+T(140,91,"Buscar por nombre o empresa","tm",11.5)+R(336,72,134,28,"f s",5)+T(346,91,"Estado: Todos ▾","",11.5)+BTN(560,72,140,"+ Nueva solicitud",1);
+    s += R(130,112,570,26,"f2 s",0); [["Código",142],["Estudiante",200],["Empresa",330],["Inicio ▲",450],["Estado",520],["Acciones",600]].forEach(c=> s += T(c[1],129,c[0],"tb",11));
+    [["#128","Pérez, Ana","Acme C.A.","02/03/2026","d","Pendiente"],["#127","Gómez, Luis","Beta S.A.","28/02/2026","c","Aprobada"],["#126","Ruiz, Marta","Acme C.A.","25/02/2026","c","Aprobada"],["#125","Díaz, José","Delta Ltda.","20/02/2026","b","Rechazada"],["#124","Soto, Elena","Beta S.A.","14/02/2026","n","Anulada"]].forEach((r,i)=>{ const y=138+i*34; s += L(130,y+34,700,y+34)+T(142,y+21,r[0],"mono",11)+T(200,y+21,r[1],"",11.5)+T(330,y+21,r[2],"",11.5)+T(450,y+21,r[3],"mono",11)+PILL(520,y+8,r[4],r[5])+T(600,y+21,"Ver   Editar   Anular","ac",11.5); });
+    s += T(130,346,"1–5 de 134 solicitudes","tm",11.5); ["‹","1","2","3","›"].forEach((p,i)=>{ s += R(540+i*32,332,28,26,i===1?"fa":"f s",5)+T(554+i*32,349,p,i===1?"ta tb":"",12,"middle"); });
+    return s; };
+  const form = (title, vals, extra) => { let s = SHELL(title);
+    s += INP(130,100,270,"Estudiante *",vals.e,0,0,vals.dis)+INP(430,100,270,"Empresa *",vals.c,vals.cph)+INP(130,170,270,"Tutor *","Ing. R. Castillo")+INP(430,170,270,"Teléfono de contacto","0414-1234567");
+    s += INP(130,240,270,"Fecha de inicio *",vals.i)+INP(430,240,270,"Fecha de fin *",vals.f,0,vals.err);
+    if (vals.err) s += T(430,286,"La fecha de fin no puede ser anterior al inicio","err tb",11);
+    s += extra; s += BTN(500,372,90,"Cancelar")+BTN(600,372,100,vals.btn,1); return s; };
+  let inner, marks, label;
+  if (step==="read"){ inner = list(); marks = MK(1,322,70)+MK(2,502,126)+MK(3,602,151)+MK(4,692,151)+MK(5,536,345)+MK(6,704,68); label="Pantalla de listado de solicitudes (Read)"; }
+  else if (step==="create"){ inner = form("Nueva solicitud",{e:"Pérez, Ana ▾",c:"Seleccione una empresa ▾",cph:1,i:"15/03/2026",f:"01/03/2026",err:1,btn:"Guardar"},T(130,316,"Observaciones","tm",11)+R(130,322,300,34,"f s",5)); marks = MK(1,412,115)+MK(2,418,255)+MK(3,708,115)+MK(4,708,370); label="Formulario de registro de solicitud (Create)"; }
+  else if (step==="update"){ inner = form("Editar solicitud #124",{e:"Soto, Elena",dis:1,c:"Beta S.A. ▾",i:"14/02/2026",f:"14/05/2026",btn:"Guardar cambios"},INP(130,312,270,"Estado","Aprobada · solo el Coordinador",0,0,1)+T(430,324,"Última modificación: M. Pérez · 12/05 10:30","tm",11)); marks = MK(1,412,115)+MK(2,412,327)+MK(3,412,255)+MK(4,708,324)+MK(5,708,370); label="Formulario de modificación de solicitud (Update)"; }
+  else { inner = list()+R(1,29,718,400,"ov",0)+R(200,100,320,236,"f s",10)+T(220,132,"¿Anular la solicitud #124?","tb",14)+T(220,158,"Tiene 2 documentos asociados.","",11.5)+T(220,175,"Se marcará como «Anulada» y se","tm",11.5)+T(220,191,"conservará en el historial.","tm",11.5)+INP(220,226,280,"Motivo de la anulación *","Duplicada por error")+BTN(320,282,84,"Cancelar")+BTN(414,282,86,"Anular",1);
+    marks = MK(1,208,106)+MK(2,508,158)+MK(3,508,226)+MK(4,510,296); label="Confirmación de anulación de solicitud (Delete)"; }
+  return SV(720,430,label,BR(720,430,url,inner)+marks);
+}
+const CRUD_LEG = {
+ read:["Búsqueda y filtros: encontrar información sin recorrer toda la lista.","Orden por columna, indicado con una flecha.","Estado con color y texto: no depende solo del color.","Acciones visibles según el rol; el servidor igual las valida.","Paginación en la consulta (LIMIT/OFFSET), no en la pantalla.","Crear: lleva al formulario de registro."],
+ create:["Campos obligatorios marcados con asterisco.","El error aparece junto al campo y explica cómo corregirlo.","Las listas se cargan desde la base de datos: son las claves foráneas.","Guardar revalida en el servidor y registra todo en una transacción."],
+ update:["El registro se carga por su identificador y se comprueba que el usuario pueda verlo.","Campos sensibles (propietario, estado) bloqueados o según el rol.","Mismas validaciones que al crear: cliente, servidor y base de datos.","Se conserva quién modificó y cuándo (bitácora).","Guardar en transacción: si algo falla, no se aplica nada."],
+ delete:["La confirmación evita eliminar por accidente.","Antes de eliminar, el servidor revisa los registros relacionados.","Eliminación lógica: cambia el estado y conserva el historial.","Se pide el motivo y el evento queda en la bitácora."]
+};
+
+function svgRespFlujo(){
+  const node = (x,y,w,h,t1,t2,c) => R(x,y,w,h,c||"f s",8)+T(x+w/2,y+(t2?h/2-3:h/2+4),t1,"tb",12,"middle")+(t2?T(x+w/2,y+h/2+13,t2,"tm",10.5,"middle"):"");
+  let s = T(20,22,"RESPALDAR","tm tb",11)+node(20,58,130,50,"Base de datos","en producción")+node(190,58,160,50,"Respaldo programado","diario y automático")+
+   node(400,28,180,46,"Copia local cifrada","con suma de verificación")+node(400,94,180,46,"Copia externa","fuera del servidor")+R(604,40,106,88,"fas sa",6)+T(657,62,"Conservación","tb ac",11,"middle")+T(657,80,"30 diarios","",10.5,"middle")+T(657,95,"12 mensuales","",10.5,"middle")+T(657,110,"1 anual","",10.5,"middle");
+  s += A("M150 83 H188")+A("M350 83 H376 V51 H398")+A("M350 83 H376 V117 H398");
+  s += L(20,160,710,160,"dash")+T(20,184,"RESTAURAR","tm tb",11);
+  s += node(20,198,140,56,"Incidente","error, fallo o ataque")+node(190,198,150,56,"Elegir copia","verificada")+node(370,198,150,56,"Probar en entorno","separado")+node(550,198,160,56,"Restaurar en producción","con confirmación");
+  s += A("M160 226 H188")+A("M340 226 H368")+A("M520 226 H548");
+  return SV(720,272,"Flujo de respaldo y restauración",s+MK(1,200,52)+MK(2,574,100)+MK(3,380,192)+MK(4,560,192));
+}
+function svgRespPantalla(){
+  let s = T(24,66,"Respaldo y restauración","tb",16)+PILL(300,50,"n","Solo Administrador")+BTN(530,46,170,"Crear respaldo ahora",1);
+  s += R(20,84,680,32,"okbg",6)+T(34,104,"Última prueba de restauración: 03/10/2026 · exitosa · datos verificados en entorno de prueba","ok tb",11.5);
+  s += R(20,130,680,26,"f2 s",0); [["Archivo",34],["Fecha",290],["Tamaño",390],["Verificación",470],["Acciones",600]].forEach(c=> s += T(c[1],147,c[0],"tb",11));
+  [["respaldo_2026-10-24_0200.sql.enc","24/10 02:00","18,4 MB","c","Verificado"],["respaldo_2026-10-23_0200.sql.enc","23/10 02:00","18,2 MB","c","Verificado"],["respaldo_2026-10-22_0200.sql.enc","22/10 02:00","18,1 MB","b","Corrupto"],["respaldo_2026-10-21_0200.sql.enc","21/10 02:00","17,9 MB","c","Verificado"]].forEach((r,i)=>{ const y=156+i*34; s += L(20,y+34,700,y+34)+T(34,y+21,r[0],"mono",10.5)+T(290,y+21,r[1],"mono",11)+T(390,y+21,r[2],"mono",11)+PILL(470,y+8,r[3],r[4])+T(600,y+21,r[3]==="b"?"Eliminar":"Descargar   Restaurar","ac",11.5); });
+  s += R(20,304,680,40,"warnbg",6)+T(34,321,"Restaurar reemplaza los datos actuales. Se pedirá confirmación y se creará antes un respaldo","dv tb",11)+T(34,336,"automático del estado actual. La acción queda registrada en la bitácora.","dv",11);
+  return SV(720,364,"Maqueta de la pantalla de respaldo y restauración",BR(720,364,"https://sistema.universidad.edu/admin/respaldos",s)+MK(1,288,58)+MK(2,266,143)+MK(3,566,143)+MK(4,706,143)+MK(5,706,100)+MK(6,706,324));
+}
+
+function svgBitacora(){
+  let s = SHELL("Bitácora del sistema")+PILL(300,44,"n","Solo Administrador y Auditor");
+  s += R(130,72,120,28,"f s",5)+T(140,91,"Usuario: Todos ▾","",11)+R(258,72,112,28,"f s",5)+T(268,91,"Módulo: Todos ▾","",11)+R(378,72,112,28,"f s",5)+T(388,91,"Acción: Todas ▾","",11)+R(498,72,130,28,"f s",5)+T(508,91,"01/10 – 24/10 ▾","mono",10.5)+BTN(636,72,64,"Filtrar",1);
+  s += R(130,112,570,26,"f2 s",0); [["Fecha y hora",140],["Usuario",246],["Módulo",326],["Acción",406],["Registro",506],["Resultado",590]].forEach(c=> s += T(c[1],129,c[0],"tb",11));
+  [["24/10 10:42","mperez","Solicitudes","Aprobar","#124","c","Éxito"],["24/10 10:31","mperez","Sesión","Inicio sesión","—","c","Éxito"],["24/10 09:58","jgomez","Sesión","Inicio sesión","—","b","Fallido"],["24/10 09:57","jgomez","Sesión","Inicio sesión","—","b","Fallido"],["23/10 16:20","admin","Usuarios","Cambio de rol","u-15","c","Éxito"],["23/10 15:05","admin","Respaldo","Restaurar","—","c","Éxito"]].forEach((r,i)=>{ const y=138+i*30; s += (i===0?R(130,y,570,30,"fas",0):"")+L(130,y+30,700,y+30)+T(140,y+19,r[0],"mono",10.5)+T(246,y+19,r[1],"mono",11)+T(326,y+19,r[2],"",11.5)+T(406,y+19,r[3],"",11.5)+T(506,y+19,r[4],"mono",11)+PILL(590,y+6,r[5],r[6]); });
+  s += R(130,330,570,88,"f s",6)+T(144,350,"Evento #4821 · Aprobar solicitud #124","tb",12)+T(144,369,"estado: Pendiente → Aprobada","mono",11)+T(144,385,"Usuario mperez · IP 10.0.4.22 · Resultado: Éxito","tm",11)+T(144,405,"No se guardan contraseñas ni datos personales innecesarios.","tm",11);
+  return SV(720,430,"Maqueta de la pantalla de bitácora del sistema",BR(720,430,"https://sistema.universidad.edu/admin/bitacora",s)+MK(1,286,52)+MK(2,636,70)+MK(3,122,125)+MK(4,672,153)+MK(5,708,125)+MK(6,708,336));
+}
+function svgBitFlujo(){
+  const node = (x,y,t1,t2) => R(x,y,140,56,"f s",8)+T(x+70,y+25,t1,"tb",12,"middle")+T(x+70,y+43,t2,"tm",10.5,"middle");
+  let s = node(20,40,"Usuario","realiza una acción")+node(200,40,"Servidor","valida y ejecuta")+node(380,40,"Transacción","operación + registro")+node(560,40,"Tabla bitacora","solo INSERT y SELECT");
+  s += A("M160 68 H198")+A("M340 68 H378")+A("M520 68 H558");
+  s += R(20,130,680,26,"f2 s",0); [["id",30],["usuario",72],["accion",150],["modulo",230],["id_registro",320],["fecha_hora",430],["resultado",540],["detalle",620]].forEach(c=> s += T(c[1],147,c[0],"tb mono",10.5));
+  s += R(20,156,680,26,"f s",0); [["4821",30],["mperez",72],["aprobar",150],["solicitudes",230],["124",320],["24/10 10:42",430],["exito",540],["estado 1→2",620]].forEach(c=> s += T(c[1],173,c[0],"mono",10.5));
+  s += R(20,196,680,28,"errbg",6)+T(34,215,"Nunca se guardan contraseñas, claves ni datos personales que no hagan falta para auditar.","err tb",11.5);
+  return SV(720,244,"Cómo se registra un evento en la bitácora",s+MK(1,208,36)+MK(2,388,36)+MK(3,568,36)+MK(4,708,210));
+}
+
+const SHOTS = [
+ {id:"login",label:"Inicio de sesión",mod:3,intro:"La puerta del sistema. Lo visible es sencillo; lo importante ocurre en el servidor.",figs:[{t:"Pantalla de inicio de sesión y su procesamiento",svg:svgLogin,leg:["Identidad institucional: logotipo y nombre del sistema.","Identificador único; se valida el formato en el cliente y en el servidor.","Contraseña enmascarada; nunca se muestra ni se registra.","Mensaje genérico: no revela si falló el usuario o la contraseña.","El botón envía las credenciales; el servidor las valida siempre de nuevo.","Recuperación con enlace de un solo uso y vencimiento.","HTTPS en producción: protege las credenciales en tránsito."]}]},
+ {id:"acceso",label:"Control de acceso",mod:3,intro:"Cada petición pasa por varias verificaciones en el servidor antes de tocar los datos.",figs:[{t:"Qué verifica el servidor al aprobar una solicitud",svg:svgAcceso,leg:["La sesión se valida en cada petición, no solo al iniciar.","Los permisos salen de la matriz rol × funcionalidad, no del navegador.","Un estudiante no ve solicitudes ajenas aunque cambie el identificador en la URL.","La regla de negocio se valida aquí y también en la base de datos."]}]},
+ {id:"dash",label:"Dashboard",mod:4,intro:"El panel principal reúne identidad, navegación según el rol e indicadores útiles para decidir.",figs:[{t:"Dashboard del Coordinador con menú lateral",svg:svgDash,leg:["Nombre del sistema y logotipo institucional siempre visibles.","Menú construido según el rol: «admin» solo aparece al Administrador (y se valida en el servidor).","Usuario, rol y cierre de sesión accesibles desde cualquier pantalla.","Indicadores que responden a decisiones de ese rol.","Gráfico ligado a un objetivo: volumen de solicitudes por mes.","Notificación de lo que requiere atención.","Resumen con estado en color y texto, con acceso al detalle."]}]},
+ {id:"menus",label:"Tipos de menú",mod:4,intro:"Cuatro patrones habituales. La elección depende de la cantidad de módulos y del tipo de usuario.",figs:[{t:"Patrones de navegación",svg:svgMenus,leg:["Lateral izquierdo: muchos módulos y trabajo diario; permite jerarquía y se contrae en el teléfono.","Horizontal con pestañas: pocos módulos del mismo nivel y pantallas sencillas.","Superior con desplegables: secciones agrupadas por tema; cuidado en pantallas táctiles.","Combinada: sistemas grandes; arriba identidad, búsqueda y perfil, a la izquierda los módulos."]}],extra:"En cualquier patrón: el menú debe respetar los permisos, mantenerse en la misma posición en todas las pantallas y tener una versión para teléfono (botón de menú)."},
+ {id:"bd",label:"Base de datos",mod:2,intro:"Entidades como tablas, claves que las conectan y datos guardados una sola vez.",figs:[
+  {t:"Modelo entidad-relación de ejemplo",svg:svgER,leg:["Cada entidad del análisis es una tabla.","PK: identifica cada fila y nunca es nula.","FK: id_rol debe existir en ROL (integridad referencial).","Cardinalidad 1:N: una empresa tiene muchas solicitudes.","UQ: el correo no se repite, y la regla vive en la base de datos.","El estado es una tabla de catálogo, no texto libre: evita «Aprobada», «aprobada » y «APROBADA» como valores distintos."]},
+  {t:"Normalización: de una tabla con repeticiones a tablas sin redundancia",svg:svgNorm}]},
+ {id:"integridad",label:"Integridad",mod:2,intro:"Las reglas importantes se aplican en tres capas. Si una falla o se omite, la siguiente protege los datos.",figs:[
+  {t:"Tres capas de validación",svg:svgCapas,leg:["Cliente: comodidad y rapidez, pero se puede saltar.","Servidor: el control real de validaciones y permisos.","Base de datos: última defensa, mantiene las reglas aunque falle lo demás.","Los cuatro tipos de integridad que debe garantizar el modelo."]},
+  {t:"Qué pasa al eliminar un registro con dependientes",svg:svgBorrado}]},
+ {id:"crud",label:"Operaciones CRUD",mod:6,intro:"Las cuatro operaciones sobre una misma entidad. Cambia de paso para ver cada pantalla.",figs:[]},
+ {id:"bitacora",label:"Bitácora",mod:10,intro:"Responde a quién hizo qué, cuándo y sobre qué información. Se define también cuánto tiempo se conserva.",figs:[
+  {t:"Pantalla de consulta de la bitácora",svg:svgBitacora,leg:["Acceso limitado a los roles autorizados, validado en el servidor.","Filtros por usuario, módulo, acción y fechas para encontrar eventos con rapidez.","Cada fila responde: cuándo, quién, en qué módulo y sobre qué registro.","El resultado incluye los intentos fallidos, útiles para detectar accesos indebidos.","Solo lectura: la pantalla no ofrece editar ni eliminar eventos.","El detalle muestra el cambio (valor anterior y nuevo) sin contraseñas ni datos sensibles."]},
+  {t:"Cómo se registra un evento",svg:svgBitFlujo,leg:["El servidor registra el evento, no el navegador, con la hora del servidor.","Operación y registro van en la misma transacción: si una falla, no se guarda ninguna.","La cuenta de la aplicación solo puede insertar y consultar; no puede modificar ni borrar.","Se evita guardar información sensible innecesaria."]}]},
+ {id:"resp",label:"Respaldo y restauración",mod:11,intro:"Un respaldo solo vale si se puede restaurar. Se prueba antes de necesitarlo.",figs:[
+  {t:"Flujo de respaldo y restauración",svg:svgRespFlujo,leg:["Mecanismo automático y programado: no depende de que alguien se acuerde.","Regla 3-2-1: al menos una copia fuera del servidor y protegida.","La restauración se prueba en un entorno separado antes de confiar en ella.","Restaurar en producción exige permiso de administrador, confirmación y queda en bitácora."]},
+  {t:"Pantalla de administración de respaldos",svg:svgRespPantalla,leg:["Acceso restringido al Administrador (validado en el servidor).","Cada copia se identifica por fecha y no es accesible por una URL pública.","La verificación de integridad detecta copias dañadas antes de necesitarlas.","Restaurar es una acción protegida con confirmación.","Se muestra cuándo fue la última prueba real de restauración.","Aviso claro del efecto: se reemplazan los datos actuales."]}]}
+];
+const MODSHOT = {2:["bd","integridad"],3:["login","acceso"],4:["dash","menus"],5:["dash","menus"],6:["crud","integridad"],9:["acceso"],10:["bitacora"],11:["resp"]};
+
+function legendHtml(a){ return '<ol class="legend">'+a.map((t,i)=>'<li><span class="mkn">'+(i+1)+"</span><span>"+esc(t)+"</span></li>").join("")+"</ol>"; }
+function vPantallas(){
+  const sh = SHOTS.find(x=>x.id===shotTab) || SHOTS[0];
+  let h = '<header class="mhead"><span class="kicker">Guía visual</span><h1>Pantallas modelo</h1><p class="muted" style="max-width:68ch">Maquetas esquemáticas para entender qué debe tener cada pantalla y cómo se conectan. Son ilustraciones, no plantillas para copiar: tu sistema debe seguir la identidad de tu institución. Los marcadores numerados se explican bajo cada figura.</p></header>';
+  h += '<div class="chips" role="group" aria-label="Elegir pantalla">'+SHOTS.map(x=>'<button class="chip" data-act="shot" data-t="'+x.id+'" aria-pressed="'+(x.id===sh.id)+'">'+esc(x.label)+"</button>").join("")+"</div>";
+  h += '<div class="shot-sec"><div><h2>'+esc(sh.label)+'</h2><p class="muted">'+esc(sh.intro)+"</p></div>";
+  if (sh.id==="crud"){
+    h += '<div class="chips" role="group" aria-label="Paso del CRUD">'+[["read","Listar · Read"],["create","Crear · Create"],["update","Editar · Update"],["delete","Eliminar · Delete"]].map(([k,l])=>'<button class="chip" data-act="crudstep" data-t="'+k+'" aria-pressed="'+(crudStep===k)+'">'+l+"</button>").join("")+"</div>";
+    h += '<figure class="fig">'+svgCrud(crudStep)+legendHtml(CRUD_LEG[crudStep])+"</figure>";
+  } else sh.figs.forEach(f => { h += '<figure class="fig"><figcaption>'+esc(f.t)+"</figcaption>"+f.svg()+(f.leg?legendHtml(f.leg):"")+"</figure>"; });
+  if (sh.extra) h += '<p class="small muted">'+esc(sh.extra)+"</p>";
+  h += '<p class="small muted">Se verifica en el <button class="linkbtn" data-act="nav" data-v="m'+sh.mod+'">Módulo '+sh.mod+". "+esc(MODS.find(m=>m.id===sh.mod).short)+"</button>.</p></div>";
+  return h;
+}
+
+/* ============ EQUIPO, AUTOEVALUACIÓN Y ACCESO DOCENTE (servidor + base de datos Neon) ============ */
+const NOTA_MAX = 20;
+const srv = {ok:null};
+const adm = {logged:false, known:false, uval:"", usuario:"", equipos:null, error:"", q:"", sort:"proyecto", open:new Set(), del:null, busy:false};
+const eqUi = {errs:{}, bad:[], busy:false, msg:null, rec:"", recErr:"", forget:false};
+const evUi = {errs:{}, busy:false, msg:null};
+
+async function api(method, url, body, codigo){
+  const h = {"Accept":"application/json"}; if (body) h["Content-Type"]="application/json"; if (codigo) h["x-codigo"]=codigo;
+  let r; try { r = await fetch(url,{method,headers:h,body:body?JSON.stringify(body):undefined,credentials:"same-origin"}); }
+  catch(e){ throw {status:0,error:"No se pudo conectar con el servidor."}; }
+  let d=null; try { d = await r.json(); } catch(e){}
+  if (!r.ok) throw {status:r.status,error:(d&&d.error)||"Error del servidor.",campos:d&&d.campos};
+  return d;
+}
+async function checkServer(){ try { await api("GET","/api/salud"); srv.ok = true; } catch(e){ srv.ok = false; } if (["equipo","autoeval","admin"].includes(view)) render(); }
+const fmtFecha = iso => { try { return new Date(iso).toLocaleString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}); } catch(e){ return ""; } };
+const srvBanner = () => srv.ok===false ? '<div class="banner bad"><b>Sin conexión con el servidor.</b> Esta sección necesita el servidor de la guía y su base de datos. Abre la guía desde la dirección publicada del proyecto, no desde un archivo local.</div>' : (srv.ok===null ? '<div class="banner">Comprobando conexión con el servidor…</div>' : "");
+const colap = s => String(s||"").replace(/\s+/g," ").trim();
+const avanceMod = m => { const s = stats(m.list); return s.pct===null ? 100 : s.pct; };
+
+/* ---- Mi equipo ---- */
+function valEquipo(t){
+  const errs = {}, bad = []; const p = colap(t.proyecto);
+  if (p.length < 3 || p.length > 80) errs.proyecto = "El nombre del proyecto debe tener entre 3 y 80 caracteres.";
+  const list = t.integrantes.map(colap), filled = list.filter(Boolean);
+  list.forEach((n,i) => { if (n && (n.length < 3 || n.length > 60)) bad.push(i); });
+  if (!filled.length) { errs.integrantes = "Registra al menos un integrante."; bad.push(0); }
+  else if (bad.length) errs.integrantes = "Cada nombre debe tener entre 3 y 60 caracteres.";
+  else if (new Set(filled.map(n=>n.toLowerCase())).size !== filled.length) errs.integrantes = "Hay nombres repetidos.";
+  return {errs, bad, data:{proyecto:p, integrantes:filled}};
+}
+function vEquipo(){
+  const t = S.team, reg = !!t.codigo;
+  let h = '<header class="mhead"><span class="kicker">Mi proyecto</span><h1>Mi equipo</h1><p class="muted" style="max-width:68ch">Registra el nombre del proyecto y a los integrantes (máximo 5). Solo un integrante debe registrar el equipo; el código que recibes sirve para entrar desde otro dispositivo.</p></header>';
+  h += srvBanner();
+  if (eqUi.msg) h += '<div class="banner '+(eqUi.msg.bad?"bad":"ok")+'" role="status">'+esc(eqUi.msg.t)+"</div>";
+  if (reg) h += '<section class="panel"><header><h2>Código del equipo</h2></header><div class="formcard"><div><span class="codebox" id="codeBox">'+esc(t.codigo)+'</span></div><p class="small muted">Guárdalo. Con este código tu equipo recupera su registro y su autoevaluación desde cualquier dispositivo. No lo compartas fuera del equipo.</p><div class="toolbar"><button class="btn" data-act="copycode">Copiar código</button></div></div></section>';
+  else h += '<section class="panel"><header><h2>¿Tu equipo ya está registrado?</h2></header><div class="formcard"><div class="field"><label class="lbl" for="recCode">Código del equipo</label><input type="text" id="recCode" data-rec="1" value="'+esc(eqUi.rec)+'" placeholder="XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters"></div>'+(eqUi.recErr?'<p class="ferr">'+esc(eqUi.recErr)+"</p>":"")+'<div class="toolbar"><button class="btn" data-act="recover"'+(eqUi.busy?" disabled":"")+'>Recuperar equipo</button></div></div></section>';
+  h += '<form data-form="team" class="panel" novalidate><header><h2>'+(reg?"Datos del equipo":"Registrar equipo")+'</h2><span class="mono small muted">'+t.integrantes.length+"/5 integrantes</span></header><div class=\"formcard\">";
+  h += '<div class="field"><label class="lbl" for="tProyecto">Nombre del proyecto *</label><input type="text" id="tProyecto" data-team="proyecto" maxlength="80" value="'+esc(t.proyecto)+'" class="'+(eqUi.errs.proyecto?"invalid":"")+'" placeholder="Ej.: Sistema de Gestión de Pasantías" autocomplete="off">'+(eqUi.errs.proyecto?'<span class="ferr">'+esc(eqUi.errs.proyecto)+"</span>":"")+"</div>";
+  h += '<div class="field"><span class="lbl">Integrantes * (mínimo 1, máximo 5)</span><div class="members">';
+  t.integrantes.forEach((n,i) => { h += '<div class="member"><span class="mn">'+(i+1)+'</span><input type="text" aria-label="Nombre completo del integrante '+(i+1)+'" id="tMem'+i+'" data-member="'+i+'" maxlength="60" value="'+esc(n)+'" class="'+(eqUi.bad.includes(i)?"invalid":"")+'" placeholder="Nombre y apellido" autocomplete="off">'+(t.integrantes.length>1?'<button type="button" class="btn" data-act="delmember" data-i="'+i+'" aria-label="Quitar integrante '+(i+1)+'">Quitar</button>':"<span></span>")+"</div>"; });
+  h += "</div>"+(eqUi.errs.integrantes?'<span class="ferr">'+esc(eqUi.errs.integrantes)+"</span>":"")+'<div><button type="button" class="btn" data-act="addmember"'+(t.integrantes.length>=5?" disabled":"")+'>+ Agregar integrante</button></div></div>';
+  h += '<div class="toolbar"><button type="submit" class="btn pri"'+(eqUi.busy?" disabled":"")+'>'+(reg?"Guardar cambios":"Registrar equipo")+"</button></div></div></form>";
+  if (reg) h += '<section class="panel"><header><h2>Cambiar de equipo en este dispositivo</h2></header><div class="formcard"><p class="small muted">Quita el equipo de este navegador (no lo borra del servidor; podrás recuperarlo con su código).</p><div class="toolbar"><button class="btn danger" data-act="forget">'+(eqUi.forget?"Confirmar: quitar equipo de este dispositivo":"Quitar equipo de este dispositivo")+"</button></div></div></section>";
+  return h;
+}
+async function saveTeam(){
+  const v = valEquipo(S.team); eqUi.errs = v.errs; eqUi.bad = v.bad; eqUi.msg = null;
+  if (Object.keys(v.errs).length){ render(); return; }
+  eqUi.busy = true; render();
+  try {
+    if (S.team.codigo){ await api("PUT","/api/equipo",v.data,S.team.codigo); eqUi.msg = {t:"Cambios del equipo guardados."}; }
+    else { const d = await api("POST","/api/equipos",v.data); S.team.codigo = d.codigo; eqUi.msg = {t:"Equipo registrado. Guarda tu código de equipo."}; }
+    S.team.proyecto = v.data.proyecto; S.team.integrantes = v.data.integrantes.slice(); save();
+  } catch(e){ eqUi.msg = {bad:true,t:e.error||"No se pudo guardar."}; if (e.campos){ eqUi.errs = {proyecto:e.campos.proyecto, integrantes:e.campos.integrantes}; } }
+  eqUi.busy = false; render();
+}
+async function recoverTeam(){
+  eqUi.recErr = ""; const c = eqUi.rec.toUpperCase().replace(/[^A-Z0-9]/g,"");
+  if (c.length !== 12){ eqUi.recErr = "El código tiene 12 caracteres (por ejemplo ABCD-EFGH-JKLM)."; render(); return; }
+  eqUi.busy = true; render();
+  try {
+    const cod = c.slice(0,4)+"-"+c.slice(4,8)+"-"+c.slice(8), d = await api("GET","/api/equipo",null,cod);
+    S.team = {codigo:cod, proyecto:d.equipo.proyecto, integrantes:d.equipo.integrantes.slice()};
+    if (d.autoevaluacion){ const ev = {notas:{},comentarios:{},general:d.autoevaluacion.comentarioGeneral,enviadoEn:d.autoevaluacion.enviadoEn,firma:""}; d.autoevaluacion.modulos.forEach(m=>{ ev.notas[m.modulo]=String(m.nota); ev.comentarios[m.modulo]=m.comentario; }); S.eval = ev; S.eval.firma = evalFirma(); }
+    save(); eqUi.rec = ""; eqUi.msg = {t:"Equipo recuperado."};
+  } catch(e){ eqUi.recErr = e.status===401 ? "No existe un equipo con ese código." : (e.error||"No se pudo recuperar el equipo."); }
+  eqUi.busy = false; render();
+}
+
+/* ---- Autoevaluación ---- */
+function evalPayload(){
+  return {comentarioGeneral:colap(S.eval.general), modulos:MODS.map(m => ({modulo:m.id, nota:S.eval.notas[m.id]===undefined?"":Number(String(S.eval.notas[m.id]).replace(",",".")), avance:avanceMod(m), comentario:colap(S.eval.comentarios[m.id])}))};
+}
+function evalFirma(){ return JSON.stringify(evalPayload()); }
+function evalNotaOk(v){ const s = String(v===undefined?"":v).replace(",",".").trim(); if (s==="") return null; const n = Number(s); return Number.isFinite(n) && n>=0 && n<=NOTA_MAX ? n : NaN; }
+function evalAvg(){ const ns = MODS.map(m => evalNotaOk(S.eval.notas[m.id])).filter(n => typeof n==="number" && !Number.isNaN(n)); return ns.length ? Math.round(ns.reduce((a,b)=>a+b,0)/ns.length*100)/100 : null; }
+function vAutoeval(){
+  let h = '<header class="mhead"><span class="kicker">Mi proyecto</span><h1>Autoevaluación</h1><p class="muted" style="max-width:68ch">Escribe la calificación (de 0 a '+NOTA_MAX+') que crees que llevas hasta ahora en cada módulo y explica brevemente por qué. Al enviarla, tu docente recibe tus notas junto con el avance que marcaste en la guía. Puedes volver a enviarla cuando avances: la nueva reemplaza a la anterior.</p></header>';
+  h += srvBanner();
+  if (!S.team.codigo) return h + '<div class="banner">Primero registra tu equipo y tu proyecto. <button class="linkbtn" data-act="nav" data-v="equipo">Ir a Mi equipo</button></div>';
+  h += '<div class="panel"><header><div><span class="lbl">Equipo</span><br><b>'+esc(S.team.proyecto)+'</b> <span class="muted small">· '+esc(S.team.integrantes.join(", "))+"</span></div></header></div>";
+  if (evUi.msg) h += '<div class="banner '+(evUi.msg.bad?"bad":"ok")+'" role="status">'+esc(evUi.msg.t)+"</div>";
+  const sent = !!S.eval.enviadoEn, dirty = sent && S.eval.firma !== evalFirma();
+  h += '<div class="banner '+(sent&&!dirty?"ok":"")+'" id="evState">'+(!sent?"<b>Sin enviar.</b> Tu docente aún no ve tu autoevaluación.":dirty?"<b>Hay cambios sin enviar.</b> Última versión enviada: "+esc(fmtFecha(S.eval.enviadoEn))+".":"<b>Enviada</b> el "+esc(fmtFecha(S.eval.enviadoEn))+".")+"</div>";
+  h += '<section class="panel"><header><h2>Calificación por módulo</h2><div><span class="lbl">Promedio</span> <span class="avg" id="avgVal">'+(evalAvg()===null?"—":evalAvg().toFixed(2))+'</span><span class="muted small"> / '+NOTA_MAX+"</span></div></header>";
+  h += '<div class="evrow evhead"><span>Módulo</span><span>Mi nota</span><span>Avance</span><span>¿Por qué esa nota?</span></div>';
+  MODS.forEach(m => { const err = evUi.errs["m"+m.id], av = avanceMod(m), v = S.eval.notas[m.id];
+    h += '<div class="evrow"><div class="mname"><span class="mono muted">'+String(m.id).padStart(2,"0")+"</span><span>"+esc(m.short)+'</span></div><div><input type="number" inputmode="decimal" min="0" max="'+NOTA_MAX+'" step="0.5" id="evn'+m.id+'" data-evn="'+m.id+'" aria-label="Nota del módulo '+m.id+' de 0 a '+NOTA_MAX+'" value="'+esc(v===undefined?"":v)+'" class="'+(err?"invalid":"")+'" placeholder="0–'+NOTA_MAX+'"></div><div class="mono small" title="Avance marcado en la guía">'+av+'%</div><div class="cm"><input type="text" id="evc'+m.id+'" data-evc="'+m.id+'" maxlength="500" aria-label="Comentario del módulo '+m.id+'" value="'+esc(S.eval.comentarios[m.id]||"")+'" placeholder="Opcional">'+(err?'<span class="ferr">'+esc(err)+"</span>":"")+"</div></div>"; });
+  h += "</section>";
+  h += '<div class="field"><label class="lbl" for="evg">Comentario general (opcional)</label><textarea id="evg" data-evg="1" maxlength="1000" placeholder="Qué falta, qué dificultades tienen, qué harán después...">'+esc(S.eval.general)+"</textarea></div>";
+  if (evUi.errs.modulos) h += '<p class="ferr">'+esc(evUi.errs.modulos)+"</p>";
+  h += '<div class="toolbar"><button class="btn pri" data-act="sendeval"'+(evUi.busy?" disabled":"")+'>'+(sent?"Reenviar autoevaluación":"Enviar autoevaluación")+'</button><span class="small muted">Debes calificar los '+MODS.length+" módulos. El «Avance» es lo que marcaste en la guía y se envía junto con tu nota.</span></div>";
+  return h;
+}
+async function sendEval(){
+  evUi.msg = null; evUi.errs = {};
+  MODS.forEach(m => { const n = evalNotaOk(S.eval.notas[m.id]); if (n===null) evUi.errs["m"+m.id] = "Falta la nota."; else if (Number.isNaN(n)) evUi.errs["m"+m.id] = "La nota debe estar entre 0 y "+NOTA_MAX+"."; });
+  if (Object.keys(evUi.errs).length){ evUi.errs.modulos = "Revisa las notas marcadas antes de enviar."; render(); const f = document.querySelector("input.invalid"); if (f) f.focus(); return; }
+  evUi.busy = true; render();
+  try { const d = await api("PUT","/api/autoevaluacion",evalPayload(),S.team.codigo); S.eval.enviadoEn = d.enviadoEn; S.eval.firma = evalFirma(); save(); evUi.msg = {t:"Autoevaluación enviada. Tu docente ya puede verla."}; }
+  catch(e){ evUi.msg = {bad:true,t:e.status===401?"Tu código de equipo ya no es válido. Recupera tu equipo en «Mi equipo».":(e.error||"No se pudo enviar.")}; if (e.campos) evUi.errs = e.campos; }
+  evUi.busy = false; render();
+}
+
+/* ---- Acceso docente ---- */
+async function adminEnter(){
+  if (!adm.known){ try { const d = await api("GET","/api/admin/yo"); adm.logged = !!d.admin; adm.usuario = d.usuario||""; srv.ok = true; } catch(e){ srv.ok = false; } adm.known = true; }
+  if (adm.logged && !adm.equipos) await adminLoad(); else render();
+}
+async function adminLoad(){
+  try { const d = await api("GET","/api/admin/equipos"); adm.equipos = d.equipos; adm.error = ""; }
+  catch(e){ if (e.status===401){ adm.logged = false; adm.equipos = null; adm.error = "Tu sesión expiró. Entra de nuevo."; } else adm.error = e.error||"No se pudo cargar."; }
+  render();
+}
+async function adminLogin(f){
+  adm.error = ""; adm.busy = true; adm.uval = f.usuario.value; const clave = f.clave.value; render();
+  try { const d = await api("POST","/api/admin/login",{usuario:adm.uval,clave}); adm.logged = true; adm.usuario = d.usuario; adm.busy = false; await adminLoad(); }
+  catch(e){ adm.error = e.error||"No se pudo iniciar sesión."; adm.busy = false; render(); const p = $("aPass"); if (p) p.focus(); }
+}
+async function adminLogout(){ try { await api("POST","/api/admin/logout"); } catch(e){} adm.logged = false; adm.equipos = null; adm.open.clear(); adm.del = null; render(); }
+function admList(){
+  const qs = adm.q.trim().toLowerCase();
+  let l = (adm.equipos||[]).filter(e => !qs || (e.proyecto+" "+e.integrantes.join(" ")).toLowerCase().includes(qs));
+  const num = v => v===null ? -1 : v;
+  if (adm.sort==="nota") l = l.slice().sort((a,b)=>num(b.notaPromedio)-num(a.notaPromedio));
+  else if (adm.sort==="avance") l = l.slice().sort((a,b)=>num(b.avancePromedio)-num(a.avancePromedio));
+  return l;
+}
+function admRows(){
+  const l = admList(); if (!l.length) return '<p class="muted" style="padding:14px 16px">'+((adm.equipos||[]).length?"Ningún equipo coincide con la búsqueda.":"Aún no hay equipos registrados.")+"</p>";
+  let h = '<div class="arow ahead"><span>Proyecto e integrantes</span><span>Nota prom.</span><span>Avance prom.</span><span>Estado</span><span></span></div>';
+  l.forEach(e => { const op = adm.open.has(e.id), gap = e.notaPromedio!==null && e.notaPromedio/NOTA_MAX*100 - e.avancePromedio > 25;
+    h += '<div class="arow"><div class="ateam"><span class="pn">'+esc(e.proyecto)+'</span><span class="small muted">'+esc(e.integrantes.join(", "))+'</span></div><span class="mono'+(gap?" gap-hi":"")+'" title="'+(gap?"La nota supera por mucho al avance marcado":"")+'">'+(e.notaPromedio===null?"—":e.notaPromedio.toFixed(2))+'</span><span class="mono">'+(e.avancePromedio===null?"—":Math.round(e.avancePromedio)+"%")+"</span><span>"+(e.enviado?pill("c").replace("Cumplido","Enviada"):pill("p").replace("Pendiente","Sin enviar"))+'</span><span><button class="btn" data-act="admopen" data-id="'+esc(e.id)+'" aria-expanded="'+op+'">'+(op?"Ocultar":"Detalle")+"</button></span></div>";
+    if (op){ h += '<div class="adet">'+(e.enviado?'<div class="small muted">Enviada el '+esc(fmtFecha(e.enviadoEn))+(gap?' · <span class="gap-hi">Nota alta respecto al avance marcado</span>':"")+'</div><div class="mini">'+e.modulos.map(m=>'<div title="'+esc(m.comentario)+'"><span class="mono muted">M'+m.modulo+'</span> nota <b>'+m.nota.toFixed(1)+'</b> · avance <b>'+m.avance+"%</b>"+(m.comentario?'<div class="small muted">'+esc(m.comentario)+"</div>":"")+"</div>").join("")+"</div>"+(e.comentarioGeneral?'<p class="small"><b>Comentario general:</b> '+esc(e.comentarioGeneral)+"</p>":""):'<p class="muted small">Este equipo aún no ha enviado su autoevaluación.</p>')+
+      '<div class="toolbar"><button class="btn danger" data-act="admdel" data-id="'+esc(e.id)+'">'+(adm.del===e.id?"Confirmar: eliminar equipo y sus datos":"Eliminar equipo")+"</button></div></div>"; } });
+  return h;
+}
+function vAdmin(){
+  let h = '<header class="mhead"><span class="kicker">Docente</span><h1>Acceso docente</h1></header>'+srvBanner();
+  if (!adm.known && srv.ok!==false) return h + '<p class="muted">Comprobando sesión…</p>';
+  if (!adm.logged) return h + '<p class="muted" style="max-width:60ch">Ingresa con tu usuario y contraseña para ver las autoevaluaciones de los equipos.</p><form data-form="login" class="panel" style="max-width:420px" novalidate><div class="formcard"><div class="field"><label class="lbl" for="aUser">Usuario</label><input type="text" id="aUser" name="usuario" value="'+esc(adm.uval||"")+'" autocomplete="username" autocapitalize="none" required></div><div class="field"><label class="lbl" for="aPass">Contraseña</label><input type="password" id="aPass" name="clave" autocomplete="current-password" required></div>'+(adm.error?'<p class="ferr" role="alert">'+esc(adm.error)+"</p>":"")+'<div><button type="submit" class="btn pri"'+(adm.busy||srv.ok===false?" disabled":"")+'>Entrar</button></div></div></form>';
+  const eq = adm.equipos||[], env = eq.filter(e=>e.enviado), avg = k => { const v = env.map(e=>e[k]).filter(x=>x!==null); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; };
+  h += '<div class="toolbar"><span class="small muted">Sesión: <b>'+esc(adm.usuario)+'</b></span><button class="btn" data-act="admrefresh">Actualizar</button><a class="btn" href="/api/admin/equipos.csv" download>Exportar CSV</a><button class="btn" data-act="admlogout">Cerrar sesión</button></div>';
+  if (adm.error) h += '<div class="banner bad" role="alert">'+esc(adm.error)+"</div>";
+  h += '<section class="stats" aria-label="Resumen">'+[["Equipos",eq.length],["Autoevaluaciones",env.length],["Nota promedio",avg("notaPromedio")===null?"—":avg("notaPromedio").toFixed(2)],["Avance promedio",avg("avancePromedio")===null?"—":Math.round(avg("avancePromedio"))+"%"]].map(([k,v])=>'<div class="stat"><span class="v">'+v+'</span><span class="k">'+k+"</span></div>").join("")+"</section>";
+  h += '<div class="toolbar"><input type="search" id="aQ" data-aq="1" placeholder="Buscar por proyecto o integrante" value="'+esc(adm.q)+'" aria-label="Buscar"><div class="chips" role="group" aria-label="Ordenar">'+[["proyecto","Proyecto"],["nota","Mayor nota"],["avance","Mayor avance"]].map(([k,l])=>'<button class="chip" data-act="admsort" data-s="'+k+'" aria-pressed="'+(adm.sort===k)+'">'+l+"</button>").join("")+"</div></div>";
+  h += '<section class="panel" id="alist"><div class="atable">'+admRows()+"</div></section>";
+  h += '<p class="small muted">La nota se compara con el avance que el equipo marcó en la guía; si la nota supera por mucho al avance se resalta en rojo. Es una referencia, no un veredicto.</p>';
+  return h;
+}
+
+/* ============ EVENTOS ============ */
+function closeMenu(){ $("side").classList.remove("open"); $("scrim").classList.remove("open"); document.body.classList.remove("noscroll"); }
+$("menuBtn").addEventListener("click", () => { $("side").classList.add("open"); $("scrim").classList.add("open"); document.body.classList.add("noscroll"); });
+$("scrim").addEventListener("click", closeMenu);
+$("themeBtn").addEventListener("click", () => setTheme(curTheme()==="dark" ? "light" : "dark"));
+
+document.addEventListener("click", async e => {
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  if (act==="theme") setTheme(el.dataset.t);
+  else if (act==="menuclose") closeMenu();
+  else if (act==="addmember"){ if (S.team.integrantes.length<5){ S.team.integrantes.push(""); save(); render(); const i = document.querySelector("[data-member]:last-of-type"); const all = document.querySelectorAll("[data-member]"); if (all.length) all[all.length-1].focus(); } }
+  else if (act==="delmember"){ S.team.integrantes.splice(Number(el.dataset.i),1); if (!S.team.integrantes.length) S.team.integrantes=[""]; eqUi.bad=[]; save(); render(); }
+  else if (act==="copycode"){ try { await navigator.clipboard.writeText(S.team.codigo); toast("Código copiado."); } catch(err){ const r = document.createRange(); r.selectNodeContents($("codeBox")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Selecciona el código y cópialo con Ctrl+C."); } }
+  else if (act==="recover") recoverTeam();
+  else if (act==="forget"){ if (eqUi.forget){ S.team = {codigo:"",proyecto:"",integrantes:[""]}; S.eval = {notas:{},comentarios:{},general:"",enviadoEn:null,firma:""}; eqUi.forget=false; eqUi.msg={t:"Equipo quitado de este dispositivo."}; save(); render(); } else { eqUi.forget=true; render(); setTimeout(()=>{ if (eqUi.forget){ eqUi.forget=false; if (view==="equipo") render(); } },5000); } }
+  else if (act==="sendeval") sendEval();
+  else if (act==="admrefresh"){ adm.equipos=null; adminLoad(); }
+  else if (act==="admlogout") adminLogout();
+  else if (act==="admopen"){ adm.open.has(id)?adm.open.delete(id):adm.open.add(id); adm.del=null; render(); }
+  else if (act==="admsort"){ adm.sort = el.dataset.s; render(); }
+  else if (act==="admdel"){
+    if (adm.del===id){ try { await api("DELETE","/api/admin/equipos/"+encodeURIComponent(id)); adm.equipos = adm.equipos.filter(e=>e.id!==id); adm.open.delete(id); adm.del=null; toast("Equipo eliminado."); } catch(err){ adm.error = err.error||"No se pudo eliminar."; } render(); }
+    else { adm.del = id; render(); setTimeout(()=>{ if (adm.del===id){ adm.del=null; if (view==="admin") render(); } },5000); }
+  }
+  else if (act==="nav") go(el.dataset.v);
+  else if (act==="jump"){ const q = REQBYID[id]; openReq.add(id); go("m"+q.m.id, id); }
+  else if (act==="setst"){
+    const prev = rs(id).s; setReq(id,{s:el.dataset.s}); if (el.dataset.s==="n") openReq.add(id);
+    render(); const b = document.querySelector('[data-act="setst"][data-id="'+id+'"][data-s="'+el.dataset.s+'"]'); if (b) b.focus({preventScroll:true});
+    if (prev!==el.dataset.s && el.dataset.s==="n") toast("Escribe la justificación para excluirlo del cálculo.");
+  }
+  else if (act==="toggle"){ openReq.has(id)?openReq.delete(id):openReq.add(id); render(); const b=document.querySelector('[data-act="toggle"][data-id="'+id+'"]'); if (b) b.focus({preventScroll:true}); }
+  else if (act==="filter"){ filter = el.dataset.f; render(); }
+  else if (act==="shot"){ shotTab = el.dataset.t; render(); }
+  else if (act==="crudstep"){ crudStep = el.dataset.t; render(); }
+  else if (act==="openshot"){ shotTab = el.dataset.t; go("pantallas"); }
+  else if (act==="expand"){ const m = MODS.find(x=>"m"+x.id===view); const ids = m.list.map(q=>q.id); const allOpen = ids.every(i=>openReq.has(i)); ids.forEach(i=>allOpen?openReq.delete(i):openReq.add(i)); render(); }
+  else if (act==="accent"){ S.meta.accent = el.dataset.c; save(); applyAccent(); render(); }
+  else if (act==="pdf"){ if (!window.jspdf){ toast("No se pudo cargar el generador de PDF."); return; } try { await save_(fname("pdf"), makePDF()); } catch(err){ toast("Error al generar el PDF."); } }
+  else if (act==="csv") await save_(fname("csv"), makeCSV());
+  else if (act==="json") await save_("copia-guia-sistemas.json", JSON.stringify(S,null,2));
+  else if (act==="import") $("impFile").click();
+  else if (act==="copy"){
+    const t = summaryText(); const box=$("copyBox"), ta=$("copyTa"); ta.value=t;
+    try { await navigator.clipboard.writeText(t); toast("Resumen copiado al portapapeles."); }
+    catch(err){ box.hidden=false; ta.focus(); ta.select(); toast("Selecciona el texto y cópialo con Ctrl+C."); }
+  }
+  else if (act==="reset"){
+    if (el.dataset.arm){ S = {meta:Object.assign({},S.meta), req:{}, coh:{}, team:S.team, eval:S.eval}; save(); openReq.clear(); toast("Avance borrado."); render(); }
+    else { el.dataset.arm="1"; el.textContent="Confirmar: borrar todo el avance"; setTimeout(()=>{ if(el.isConnected){ delete el.dataset.arm; el.textContent="Borrar todo el avance"; } },5000); }
+  }
+});
+
+document.addEventListener("input", e => {
+  const t = e.target;
+  if (t.dataset.team){ S.team[t.dataset.team] = t.value; save(); }
+  else if (t.dataset.member!==undefined){ S.team.integrantes[Number(t.dataset.member)] = t.value; save(); }
+  else if (t.dataset.rec){ eqUi.rec = t.value; }
+  else if (t.dataset.evn){ S.eval.notas[t.dataset.evn] = t.value; t.classList.remove("invalid"); const fe = t.closest(".evrow") && t.closest(".evrow").querySelector(".ferr"); if (fe) fe.remove(); save(); const a = evalAvg(), el1 = $("avgVal"); if (el1) el1.textContent = a===null?"—":a.toFixed(2); const st = $("evState"); if (st && S.eval.enviadoEn){ st.className = "banner"; st.innerHTML = "<b>Hay cambios sin enviar.</b> Última versión enviada: "+esc(fmtFecha(S.eval.enviadoEn))+"."; } }
+  else if (t.dataset.evc){ S.eval.comentarios[t.dataset.evc] = t.value; save(); }
+  else if (t.dataset.evg){ S.eval.general = t.value; save(); }
+  else if (t.dataset.aq){ adm.q = t.value; const box = document.querySelector("#alist .atable"); if (box) box.innerHTML = admRows(); }
+  else if (t.dataset.note) setReq(t.dataset.note,{note:t.value});
+  else if (t.dataset.na){ setReq(t.dataset.na,{na:t.value}); const w=$("nw-"+t.dataset.na); if (w) w.hidden = t.value.trim().length>0; renderSide(); }
+  else if (t.dataset.meta){ const k=t.dataset.meta; if (k==="accent" && !hexOk(t.value)) return; S.meta[k]=t.value; save(); if (k==="accent"){ applyAccent(); } }
+});
+document.addEventListener("change", e => {
+  const t = e.target;
+  if (t.dataset.coh!==undefined){ S.coh[t.dataset.coh]=t.checked; save(); render(); }
+  else if (t.dataset.meta==="accent"){ render(); }
+  else if (t.id==="impFile" && t.files[0]){
+    const fr = new FileReader();
+    fr.onload = () => { try { const j = JSON.parse(fr.result); if (!j || typeof j.req!=="object") throw 0; S = {meta:Object.assign({name:"",student:"",institution:"",accent:PRESETS[0]},j.meta||{}), req:j.req, coh:j.coh||{}, team:S.team, eval:S.eval}; save(); applyAccent(); render(); toast("Copia importada."); } catch(err){ toast("El archivo no es una copia válida de esta guía."); } };
+    fr.readAsText(t.files[0]); t.value="";
+  }
+});
+document.addEventListener("keydown", e => { if (e.key==="Escape") closeMenu(); });
+document.addEventListener("submit", e => {
+  const f = e.target.closest("form[data-form]"); if (!f) return; e.preventDefault();
+  if (f.dataset.form==="team") saveTeam(); else if (f.dataset.form==="login") adminLogin(f);
+});
+
+/* ============ ARRANQUE ============ */
+/* Pantalla de carga: espera a que termine de cargar la página (fuentes, PDF, logo) y se muestra un mínimo de 1,4 s */
+(function(){
+  const ld = $("loader"), t0 = Date.now(); let done = false;
+  const hide = () => { if (done) return; done = true; const w = Math.max(0, 1400-(Date.now()-t0)); setTimeout(() => { ld.classList.add("out"); setTimeout(() => { ld.hidden = true; }, 500); }, w); };
+  if (document.readyState === "complete") hide(); else window.addEventListener("load", hide);
+  setTimeout(hide, 5000);
+})();
+applyTheme(); applyAccent(); render(); checkServer(); if (view==="admin") adminEnter();
+(async () => { try { dl = (await window.claude?.use?.("downloads")) || null; } catch(e){ dl = null; } if (dl && view==="proyecto") render(); })();
+</script>
+
+</body>
+</html>
